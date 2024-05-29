@@ -13,8 +13,8 @@ const player = {
     speed: 5,
     dx: 0,
     dy: 0,
-    gravity: 0.2,
-    jetpackForce: -0.1,
+    gravity: 0.1,
+    jetpackForce: -0.2,
     maxHeight: 100
 };
 
