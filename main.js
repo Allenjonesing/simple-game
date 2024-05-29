@@ -13,7 +13,7 @@ const player = {
     speed: 5,
     dx: 0,
     dy: 0,
-    gravity: 0.05,
+    gravity: 0.2,
     jetpackForce: -0.1,
     maxHeight: 100,
     canShoot: true
@@ -32,9 +32,7 @@ const platforms = [
 ];
 
 const boxes = [
-    { x: 150, y: canvas.height - 250, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 },
-    { x: 150, y: canvas.height - 350, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 },
-    { x: 150, y: canvas.height - 450, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 }
+    { x: 150, y: canvas.height - 250, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 }
 ];
 
 const rockets = [];
@@ -149,6 +147,7 @@ function updateBoxes() {
         box.y += box.dy;
         box.angle += box.angularVelocity;
 
+        // Box and platform collision
         platforms.forEach(platform => {
             if (box.x < platform.x + platform.width &&
                 box.x + box.width > platform.x &&
@@ -158,6 +157,66 @@ function updateBoxes() {
                     box.y = platform.y - box.height;
                     box.angularVelocity = 0;
                 }
+        });
+
+        // Box and player collision
+        if (player.x < box.x + box.width &&
+            player.x + player.width > box.x &&
+            player.y < box.y + box.height &&
+            player.y + player.height > box.y) {
+                const overlapX = Math.min(player.x + player.width - box.x, box.x + box.width - player.x);
+                const overlapY = Math.min(player.y + player.height - box.y, box.y + box.height - player.y);
+                if (overlapX < overlapY) {
+                    if (player.x < box.x) {
+                        player.x -= overlapX;
+                    } else {
+                        player.x += overlapX;
+                    }
+                    player.dx = 0;
+                } else {
+                    if (player.y < box.y) {
+                        player.y -= overlapY;
+                    } else {
+                        player.y += overlapY;
+                    }
+                    player.dy = 0;
+                }
+        }
+
+        // Box and box collision
+        boxes.forEach(otherBox => {
+            if (box !== otherBox) {
+                if (box.x < otherBox.x + otherBox.width &&
+                    box.x + box.width > otherBox.x &&
+                    box.y < otherBox.y + otherBox.height &&
+                    box.y + box.height > otherBox.y) {
+                        const overlapX = Math.min(box.x + box.width - otherBox.x, otherBox.x + otherBox.width - box.x);
+                        const overlapY = Math.min(box.y + box.height - otherBox.y, otherBox.y + otherBox.height - box.y);
+                        if (overlapX < overlapY) {
+                            if (box.x < otherBox.x) {
+                                box.x -= overlapX / 2;
+                                otherBox.x += overlapX / 2;
+                            } else {
+                                box.x += overlapX / 2;
+                                otherBox.x -= overlapX / 2;
+                            }
+                            box.dx = 0;
+                            otherBox.dx = 0;
+                        } else {
+                            if (box.y < otherBox.y) {
+                                box.y -= overlapY / 2;
+                                otherBox.y += overlapY / 2;
+                            } else {
+                                box.y += overlapY / 2;
+                                otherBox.y -= overlapY / 2;
+                            }
+                            box.dy = 0;
+                            otherBox.dy = 0;
+                        }
+                        box.angularVelocity = (Math.random() - 0.5) * 0.05;
+                        otherBox.angularVelocity = (Math.random() - 0.5) * 0.05;
+                }
+            }
         });
 
         // Limit box to the canvas boundaries
@@ -175,16 +234,6 @@ function updateBoxes() {
             box.y = canvas.height - box.height;
             box.dy = 0;
             box.angularVelocity = 0;
-        }
-
-        // Check collision with player
-        if (player.x < box.x + box.width &&
-            player.x + player.width > box.x &&
-            player.y < box.y + box.height &&
-            player.y + player.height > box.y) {
-                box.dx = player.dx;
-                box.dy = player.dy;
-                box.angularVelocity = player.dx * 0.05;
         }
     });
 }
@@ -226,84 +275,3 @@ function createParticles(x, y) {
 }
 
 function updateParticles() {
-    particles.forEach((particle, index) => {
-        particle.x += particle.dx;
-        particle.y += particle.dy;
-        particle.alpha -= 0.02;
-
-        if (particle.alpha <= 0) {
-            particles.splice(index, 1);
-        }
-    });
-}
-
-function shootRocket(targetX, targetY) {
-    if (!player.canShoot) return;
-    player.canShoot = false;
-    setTimeout(() => player.canShoot = true, 500); // 0.5 seconds cooldown
-
-    const angle = Math.atan2(targetY - (player.y + player.height / 2), targetX - (player.x + player.width / 2));
-    const speed = 10;
-
-    rockets.push({
-        x: player.x + player.width / 2,
-        y: player.y + player.height / 2,
-        width: 10,
-        height: 5,
-        dx: Math.cos(angle) * speed,
-        dy: Math.sin(angle) * speed
-    });
-}
-
-function createExplosion(x, y) {
-    for (let i = 0; i < 20; i++) {
-        particles.push({
-            x: x,
-            y: y,
-            size: Math.random() * 10 + 2,
-            alpha: 1,
-            dx: (Math.random() - 0.5) * 5,
-            dy: (Math.random() - 0.5) * 5
-        });
-    }
-
-    boxes.forEach(box => {
-        const distX = box.x + box.width / 2 - x;
-        const distY = box.y + box.height / 2 - y;
-        const distance = Math.sqrt(distX * distX + distY * distY);
-        const force = 100 / (distance + 1);
-
-        box.dx += distX * force;
-        box.dy += distY * force;
-        box.angularVelocity += (Math.random() - 0.5) * force;
-    });
-}
-
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight' || e.key === 'd') {
-        keys.right = true;
-    } else if (e.key === 'ArrowLeft' || e.key === 'a') {
-        keys.left = true;
-    } else if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') {
-        keys.up = true;
-    }
-});
-
-document.addEventListener('keyup', (e) => {
-    if (e.key === 'ArrowRight' || e.key === 'd') {
-        keys.right = false;
-    } else if (e.key === 'ArrowLeft' || e.key === 'a') {
-        keys.left = false;
-    } else if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') {
-        keys.up = false;
-    }
-});
-
-canvas.addEventListener('click', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    shootRocket(mouseX, mouseY);
-});
-
-update();
