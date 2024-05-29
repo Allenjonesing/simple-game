@@ -169,7 +169,7 @@ function updateBoxes() {
                         box.dy = 0;
                         box.y = platform.y + platform.height;
                     }
-                    box.angularVelocity *= -0.5; // Reduce angular velocity on impact
+                    box.angularVelocity *= 0.5; // Reduce angular velocity on impact
             }
         });
 
@@ -199,7 +199,7 @@ function updateBoxes() {
                 }
                 box.dx = player.dx * 0.5;
                 box.dy = player.dy * 0.5;
-                box.angularVelocity += (Math.random() - 0.5) * 0.1;
+                box.angularVelocity += (Math.random() - 0.5) * 0.05;
         }
 
         // Box and box collision
@@ -232,8 +232,8 @@ function updateBoxes() {
                             box.dy *= -0.5;
                             otherBox.dy *= -0.5;
                         }
-                        box.angularVelocity += (Math.random() - 0.5) * 0.1;
-                        otherBox.angularVelocity += (Math.random() - 0.5) * 0.1;
+                        box.angularVelocity += (Math.random() - 0.5) * 0.05;
+                        otherBox.angularVelocity += (Math.random() - 0.5) * 0.05;
                     }
             }
         });
@@ -297,7 +297,7 @@ function createParticles(x, y) {
             dx: (Math.random() - 0.5) * 5,
             dy: (Math.random() - 0.5) * 5
         });
-    }
+    });
 }
 
 function updateParticles() {
