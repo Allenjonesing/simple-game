@@ -32,7 +32,10 @@ const platforms = [
 ];
 
 const boxes = [
-    { x: 150, y: canvas.height - 250, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 }
+    { x: 150, y: canvas.height - 150, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 }
+    ,{ x: 150, y: canvas.height - 250, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 }
+    ,{ x: 190, y: canvas.height - 350, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 }
+    ,{ x: 230, y: canvas.height - 450, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 }
 ];
 
 const rockets = [];
@@ -320,7 +323,7 @@ function createExplosion(x, y) {
         const distX = box.x + box.width / 2 - x;
         const distY = box.y + box.height / 2 - y;
         const distance = Math.sqrt(distX * distX + distY * distY);
-        const force = 100 / (distance + 1);
+        const force = 10 / (distance + 1);
 
         box.dx += distX * force;
         box.dy += distY * force;
