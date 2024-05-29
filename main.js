@@ -32,9 +32,9 @@ const platforms = [
 ];
 
 const boxes = [
-    { x: 150, y: canvas.height - 250, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 },
-    { x: 250, y: canvas.height - 300, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 },
-    { x: 350, y: canvas.height - 350, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 }
+    { x: 150, y: canvas.height - 250, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0, friction: 0.98 },
+    { x: 250, y: canvas.height - 300, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0, friction: 0.98 },
+    { x: 350, y: canvas.height - 350, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0, friction: 0.98 }
 ];
 
 const rockets = [];
@@ -136,8 +136,13 @@ function checkPlatformCollision() {
             player.x + player.width > platform.x &&
             player.y < platform.y + platform.height &&
             player.y + player.height > platform.y) {
-                player.dy = 0;
-                player.y = platform.y - player.height;
+                if (player.dy > 0) {
+                    player.dy = 0;
+                    player.y = platform.y - player.height;
+                } else if (player.dy < 0) {
+                    player.dy = 0;
+                    player.y = platform.y + platform.height;
+                }
         }
     });
 }
@@ -145,6 +150,8 @@ function checkPlatformCollision() {
 function updateBoxes() {
     boxes.forEach(box => {
         box.dy += player.gravity;
+        box.dx *= box.friction;
+        box.dy *= box.friction;
         box.x += box.dx;
         box.y += box.dy;
         box.angle += box.angularVelocity;
@@ -155,9 +162,14 @@ function updateBoxes() {
                 box.x + box.width > platform.x &&
                 box.y < platform.y + platform.height &&
                 box.y + box.height > platform.y) {
-                    box.dy = 0;
-                    box.y = platform.y - box.height;
-                    box.angularVelocity = 0;
+                    if (box.dy > 0) {
+                        box.dy = 0;
+                        box.y = platform.y - box.height;
+                    } else if (box.dy < 0) {
+                        box.dy = 0;
+                        box.y = platform.y + platform.height;
+                    }
+                    box.angularVelocity *= -0.5; // Reduce angular velocity on impact
             }
         });
 
@@ -171,18 +183,23 @@ function updateBoxes() {
                 if (overlapX < overlapY) {
                     if (player.x < box.x) {
                         player.x -= overlapX;
+                        box.x += overlapX;
                     } else {
                         player.x += overlapX;
+                        box.x -= overlapX;
                     }
-                    player.dx = 0;
                 } else {
                     if (player.y < box.y) {
                         player.y -= overlapY;
+                        box.y += overlapY;
                     } else {
                         player.y += overlapY;
+                        box.y -= overlapY;
                     }
-                    player.dy = 0;
                 }
+                box.dx = player.dx * 0.5;
+                box.dy = player.dy * 0.5;
+                box.angularVelocity += (Math.random() - 0.5) * 0.1;
         }
 
         // Box and box collision
@@ -202,8 +219,8 @@ function updateBoxes() {
                                 box.x += overlapX / 2;
                                 otherBox.x -= overlapX / 2;
                             }
-                            box.dx = 0;
-                            otherBox.dx = 0;
+                            box.dx *= -0.5;
+                            otherBox.dx *= -0.5;
                         } else {
                             if (box.y < otherBox.y) {
                                 box.y -= overlapY / 2;
@@ -212,12 +229,12 @@ function updateBoxes() {
                                 box.y += overlapY / 2;
                                 otherBox.y -= overlapY / 2;
                             }
-                            box.dy = 0;
-                            otherBox.dy = 0;
+                            box.dy *= -0.5;
+                            otherBox.dy *= -0.5;
                         }
                         box.angularVelocity += (Math.random() - 0.5) * 0.1;
                         otherBox.angularVelocity += (Math.random() - 0.5) * 0.1;
-                }
+                    }
             }
         });
 
@@ -271,14 +288,14 @@ function updateRockets() {
 }
 
 function createParticles(x, y) {
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 50; i++) {
         particles.push({
             x: x,
             y: y,
-            size: Math.random() * 5 + 1,
+            size: Math.random() * 10 + 2,
             alpha: 1,
-            dx: (Math.random() - 0.5) * 2,
-            dy: Math.random() * 2
+            dx: (Math.random() - 0.5) * 5,
+            dy: (Math.random() - 0.5) * 5
         });
     }
 }
