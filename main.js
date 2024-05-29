@@ -66,7 +66,7 @@ function createParticles(x, y) {
 
 function updateParticles() {
     particles.forEach((particle, index) => {
-        particle.render.fillStyle = `rgba(255, 165, 0, ${particle.render.fillStyle.match(/rgba\(\d+,\s*\d+,\s*\d+,\s*(\d+(?:\.\d+)?)/)[1] - 0.02})`;
+        particle.render.fillStyle = `rgba(255, 165, 0, ${parseFloat(particle.render.fillStyle.match(/rgba\(\d+,\s*\d+,\s*\d+,\s*(\d+(?:\.\d+)?)/)[1]) - 0.02})`;
         if (parseFloat(particle.render.fillStyle.match(/rgba\(\d+,\s*\d+,\s*\d+,\s*(\d+(?:\.\d+)?)/)[1]) <= 0) {
             World.remove(world, particle);
             particles.splice(index, 1);
@@ -129,4 +129,5 @@ function createExplosion(x, y) {
     });
 }
 
-update();
+Engine.run(engine);
+Render.run(render);
