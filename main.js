@@ -297,7 +297,7 @@ function createParticles(x, y) {
             dx: (Math.random() - 0.5) * 5,
             dy: (Math.random() - 0.5) * 5
         });
-    });
+    };
 }
 
 function updateParticles() {
