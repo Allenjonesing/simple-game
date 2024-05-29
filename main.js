@@ -32,10 +32,9 @@ const platforms = [
 ];
 
 const boxes = [
-    { x: 150, y: canvas.height - 150, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 }
-    ,{ x: 150, y: canvas.height - 250, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 }
-    ,{ x: 190, y: canvas.height - 350, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 }
-    ,{ x: 230, y: canvas.height - 450, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 }
+    { x: 150, y: canvas.height - 250, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 },
+    { x: 250, y: canvas.height - 300, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 },
+    { x: 350, y: canvas.height - 350, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 }
 ];
 
 const rockets = [];
@@ -139,7 +138,7 @@ function checkPlatformCollision() {
             player.y + player.height > platform.y) {
                 player.dy = 0;
                 player.y = platform.y - player.height;
-            }
+        }
     });
 }
 
@@ -159,7 +158,7 @@ function updateBoxes() {
                     box.dy = 0;
                     box.y = platform.y - box.height;
                     box.angularVelocity = 0;
-                }
+            }
         });
 
         // Box and player collision
@@ -216,8 +215,8 @@ function updateBoxes() {
                             box.dy = 0;
                             otherBox.dy = 0;
                         }
-                        box.angularVelocity = (Math.random() - 0.5) * 0.05;
-                        otherBox.angularVelocity = (Math.random() - 0.5) * 0.05;
+                        box.angularVelocity += (Math.random() - 0.5) * 0.1;
+                        otherBox.angularVelocity += (Math.random() - 0.5) * 0.1;
                 }
             }
         });
@@ -246,8 +245,15 @@ function updateRockets() {
         rocket.x += rocket.dx;
         rocket.y += rocket.dy;
 
-        // Remove rocket if out of bounds
+        // Remove rocket if out of bounds and create explosion
         if (rocket.x < 0 || rocket.x > canvas.width || rocket.y < 0 || rocket.y > canvas.height) {
+            createExplosion(rocket.x, rocket.y);
+            rockets.splice(index, 1);
+        }
+
+        // Check collision with ground
+        if (rocket.y + rocket.height >= canvas.height) {
+            createExplosion(rocket.x, canvas.height - rocket.height);
             rockets.splice(index, 1);
         }
 
@@ -259,13 +265,13 @@ function updateRockets() {
                 rocket.y + rocket.height > box.y) {
                     createExplosion(rocket.x, rocket.y);
                     rockets.splice(index, 1);
-                }
+            }
         });
     });
 }
 
 function createParticles(x, y) {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 20; i++) {
         particles.push({
             x: x,
             y: y,
@@ -308,7 +314,7 @@ function shootRocket(targetX, targetY) {
 }
 
 function createExplosion(x, y) {
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 50; i++) {
         particles.push({
             x: x,
             y: y,
