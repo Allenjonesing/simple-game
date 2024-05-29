@@ -275,3 +275,84 @@ function createParticles(x, y) {
 }
 
 function updateParticles() {
+    particles.forEach((particle, index) => {
+        particle.x += particle.dx;
+        particle.y += particle.dy;
+        particle.alpha -= 0.02;
+
+        if (particle.alpha <= 0) {
+            particles.splice(index, 1);
+        }
+    });
+}
+
+function shootRocket(targetX, targetY) {
+    if (!player.canShoot) return;
+    player.canShoot = false;
+    setTimeout(() => player.canShoot = true, 500); // 0.5 seconds cooldown
+
+    const angle = Math.atan2(targetY - (player.y + player.height / 2), targetX - (player.x + player.width / 2));
+    const speed = 10;
+
+    rockets.push({
+        x: player.x + player.width / 2,
+        y: player.y + player.height / 2,
+        width: 10,
+        height: 5,
+        dx: Math.cos(angle) * speed,
+        dy: Math.sin(angle) * speed
+    });
+}
+
+function createExplosion(x, y) {
+    for (let i = 0; i < 20; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            size: Math.random() * 10 + 2,
+            alpha: 1,
+            dx: (Math.random() - 0.5) * 5,
+            dy: (Math.random() - 0.5) * 5
+        });
+    }
+
+    boxes.forEach(box => {
+        const distX = box.x + box.width / 2 - x;
+        const distY = box.y + box.height / 2 - y;
+        const distance = Math.sqrt(distX * distX + distY * distY);
+        const force = 100 / (distance + 1);
+
+        box.dx += distX * force;
+        box.dy += distY * force;
+        box.angularVelocity += (Math.random() - 0.5) * force;
+    });
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'd') {
+        keys.right = true;
+    } else if (e.key === 'ArrowLeft' || e.key === 'a') {
+        keys.left = true;
+    } else if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') {
+        keys.up = true;
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'd') {
+        keys.right = false;
+    } else if (e.key === 'ArrowLeft' || e.key === 'a') {
+        keys.left = false;
+    } else if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') {
+        keys.up = false;
+    }
+});
+
+canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    shootRocket(mouseX, mouseY);
+});
+
+update();
