@@ -17,7 +17,9 @@ const render = Render.create({
 });
 
 Render.run(render);
-Runner.run(Runner.create(), engine);
+
+const runner = Runner.create();
+Runner.run(runner, engine);
 
 const player = Bodies.rectangle(50, window.innerHeight - 100, 50, 50, { 
     render: { fillStyle: 'red' }, 
@@ -66,8 +68,9 @@ function createParticles(x, y) {
 
 function updateParticles() {
     particles.forEach((particle, index) => {
-        particle.render.fillStyle = `rgba(255, 165, 0, ${parseFloat(particle.render.fillStyle.match(/rgba\(\d+,\s*\d+,\s*\d+,\s*(\d+(?:\.\d+)?)/)[1]) - 0.02})`;
-        if (parseFloat(particle.render.fillStyle.match(/rgba\(\d+,\s*\d+,\s*\d+,\s*(\d+(?:\.\d+)?)/)[1]) <= 0) {
+        const alpha = parseFloat(particle.render.fillStyle.match(/rgba\(\d+,\s*\d+,\s*\d+,\s*(\d+(?:\.\d+)?)/)[1]) - 0.02;
+        particle.render.fillStyle = `rgba(255, 165, 0, ${alpha})`;
+        if (alpha <= 0) {
             World.remove(world, particle);
             particles.splice(index, 1);
         }
@@ -129,5 +132,7 @@ function createExplosion(x, y) {
     });
 }
 
-Engine.run(engine);
-Render.run(render);
+// The deprecated Engine.run was replaced with Runner.run
+// Engine.run(engine);
+// Render.run(render);
+
