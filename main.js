@@ -13,9 +13,10 @@ const player = {
     speed: 5,
     dx: 0,
     dy: 0,
-    gravity: 0.1,
-    jetpackForce: -0.2,
-    maxHeight: 100
+    gravity: 0.05,
+    jetpackForce: -0.1,
+    maxHeight: 100,
+    canShoot: true
 };
 
 const keys = {
@@ -31,8 +32,13 @@ const platforms = [
 ];
 
 const boxes = [
-    { x: 150, y: canvas.height - 250, width: 50, height: 50, dx: 0, dy: 0 }
+    { x: 150, y: canvas.height - 250, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 },
+    { x: 150, y: canvas.height - 350, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 },
+    { x: 150, y: canvas.height - 450, width: 50, height: 50, dx: 0, dy: 0, angle: 0, angularVelocity: 0 }
 ];
+
+const rockets = [];
+const particles = [];
 
 function drawPlayer() {
     ctx.fillStyle = player.color;
@@ -49,13 +55,24 @@ function drawPlatforms() {
 function drawBoxes() {
     ctx.fillStyle = 'blue';
     boxes.forEach(box => {
-        ctx.fillRect(box.x, box.y, box.width, box.height);
+        ctx.save();
+        ctx.translate(box.x + box.width / 2, box.y + box.height / 2);
+        ctx.rotate(box.angle);
+        ctx.fillRect(-box.width / 2, -box.height / 2, box.width, box.height);
+        ctx.restore();
     });
 }
 
-function drawParticles(particles) {
+function drawRockets() {
+    ctx.fillStyle = 'orange';
+    rockets.forEach(rocket => {
+        ctx.fillRect(rocket.x, rocket.y, rocket.width, rocket.height);
+    });
+}
+
+function drawParticles() {
     particles.forEach(particle => {
-        ctx.fillStyle = `rgba(255, 255, 0, ${particle.alpha})`;
+        ctx.fillStyle = `rgba(255, 165, 0, ${particle.alpha})`;
         ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
     });
 }
@@ -64,14 +81,13 @@ function clear() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-const particles = [];
-
 function update() {
     clear();
     drawPlayer();
     drawPlatforms();
     drawBoxes();
-    drawParticles(particles);
+    drawRockets();
+    drawParticles();
     player.x += player.dx;
     player.y += player.dy;
 
@@ -108,6 +124,7 @@ function update() {
 
     checkPlatformCollision();
     updateBoxes();
+    updateRockets();
     updateParticles();
 
     requestAnimationFrame(update);
@@ -130,6 +147,7 @@ function updateBoxes() {
         box.dy += player.gravity;
         box.x += box.dx;
         box.y += box.dy;
+        box.angle += box.angularVelocity;
 
         platforms.forEach(platform => {
             if (box.x < platform.x + platform.width &&
@@ -138,6 +156,7 @@ function updateBoxes() {
                 box.y + box.height > platform.y) {
                     box.dy = 0;
                     box.y = platform.y - box.height;
+                    box.angularVelocity = 0;
                 }
         });
 
@@ -145,14 +164,17 @@ function updateBoxes() {
         if (box.x < 0) {
             box.x = 0;
             box.dx = 0;
+            box.angularVelocity = 0;
         }
         if (box.x + box.width > canvas.width) {
             box.x = canvas.width - box.width;
             box.dx = 0;
+            box.angularVelocity = 0;
         }
         if (box.y + box.height > canvas.height) {
             box.y = canvas.height - box.height;
             box.dy = 0;
+            box.angularVelocity = 0;
         }
 
         // Check collision with player
@@ -162,7 +184,31 @@ function updateBoxes() {
             player.y + player.height > box.y) {
                 box.dx = player.dx;
                 box.dy = player.dy;
+                box.angularVelocity = player.dx * 0.05;
         }
+    });
+}
+
+function updateRockets() {
+    rockets.forEach((rocket, index) => {
+        rocket.x += rocket.dx;
+        rocket.y += rocket.dy;
+
+        // Remove rocket if out of bounds
+        if (rocket.x < 0 || rocket.x > canvas.width || rocket.y < 0 || rocket.y > canvas.height) {
+            rockets.splice(index, 1);
+        }
+
+        // Check collision with boxes
+        boxes.forEach(box => {
+            if (rocket.x < box.x + box.width &&
+                rocket.x + rocket.width > box.x &&
+                rocket.y < box.y + box.height &&
+                rocket.y + rocket.height > box.y) {
+                    createExplosion(rocket.x, rocket.y);
+                    rockets.splice(index, 1);
+                }
+        });
     });
 }
 
@@ -191,6 +237,48 @@ function updateParticles() {
     });
 }
 
+function shootRocket(targetX, targetY) {
+    if (!player.canShoot) return;
+    player.canShoot = false;
+    setTimeout(() => player.canShoot = true, 500); // 0.5 seconds cooldown
+
+    const angle = Math.atan2(targetY - (player.y + player.height / 2), targetX - (player.x + player.width / 2));
+    const speed = 10;
+
+    rockets.push({
+        x: player.x + player.width / 2,
+        y: player.y + player.height / 2,
+        width: 10,
+        height: 5,
+        dx: Math.cos(angle) * speed,
+        dy: Math.sin(angle) * speed
+    });
+}
+
+function createExplosion(x, y) {
+    for (let i = 0; i < 20; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            size: Math.random() * 10 + 2,
+            alpha: 1,
+            dx: (Math.random() - 0.5) * 5,
+            dy: (Math.random() - 0.5) * 5
+        });
+    }
+
+    boxes.forEach(box => {
+        const distX = box.x + box.width / 2 - x;
+        const distY = box.y + box.height / 2 - y;
+        const distance = Math.sqrt(distX * distX + distY * distY);
+        const force = 100 / (distance + 1);
+
+        box.dx += distX * force;
+        box.dy += distY * force;
+        box.angularVelocity += (Math.random() - 0.5) * force;
+    });
+}
+
 document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight' || e.key === 'd') {
         keys.right = true;
@@ -209,6 +297,13 @@ document.addEventListener('keyup', (e) => {
     } else if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') {
         keys.up = false;
     }
+});
+
+canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    shootRocket(mouseX, mouseY);
 });
 
 update();
