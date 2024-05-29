@@ -14,7 +14,8 @@ const player = {
     dx: 0,
     dy: 0,
     gravity: 0.2,
-    jetpackForce: -0.5
+    jetpackForce: -0.1,
+    maxHeight: 100
 };
 
 const keys = {
@@ -52,15 +53,25 @@ function drawBoxes() {
     });
 }
 
+function drawParticles(particles) {
+    particles.forEach(particle => {
+        ctx.fillStyle = `rgba(255, 255, 0, ${particle.alpha})`;
+        ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
+    });
+}
+
 function clear() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
+
+const particles = [];
 
 function update() {
     clear();
     drawPlayer();
     drawPlatforms();
     drawBoxes();
+    drawParticles(particles);
     player.x += player.dx;
     player.y += player.dy;
 
@@ -73,8 +84,9 @@ function update() {
     }
 
     // Jetpack movement
-    if (keys.up) {
+    if (keys.up && player.y > player.maxHeight) {
         player.dy += player.jetpackForce;
+        createParticles(player.x + player.width / 2, player.y + player.height);
     }
 
     // Horizontal movement
@@ -96,6 +108,7 @@ function update() {
 
     checkPlatformCollision();
     updateBoxes();
+    updateParticles();
 
     requestAnimationFrame(update);
 }
@@ -140,6 +153,40 @@ function updateBoxes() {
         if (box.y + box.height > canvas.height) {
             box.y = canvas.height - box.height;
             box.dy = 0;
+        }
+
+        // Check collision with player
+        if (player.x < box.x + box.width &&
+            player.x + player.width > box.x &&
+            player.y < box.y + box.height &&
+            player.y + player.height > box.y) {
+                box.dx = player.dx;
+                box.dy = player.dy;
+        }
+    });
+}
+
+function createParticles(x, y) {
+    for (let i = 0; i < 5; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            size: Math.random() * 5 + 1,
+            alpha: 1,
+            dx: (Math.random() - 0.5) * 2,
+            dy: Math.random() * 2
+        });
+    }
+}
+
+function updateParticles() {
+    particles.forEach((particle, index) => {
+        particle.x += particle.dx;
+        particle.y += particle.dy;
+        particle.alpha -= 0.02;
+
+        if (particle.alpha <= 0) {
+            particles.splice(index, 1);
         }
     });
 }
