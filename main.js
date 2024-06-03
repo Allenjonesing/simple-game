@@ -14,11 +14,16 @@ const config = {
 const game = new Phaser.Game(config);
 let player;
 let otherPlayers = {};
+let client;
 
 function preload() {
     this.load.image('player', 'assets/playerShip.png');  // Add a valid path to your player image
+    console.log('Preloading assets...');
+    this.load.on('complete', () => {
+        console.log('Assets loaded successfully.');
+    });
 }
-
+    
 function create() {
     const client = new Photon.LoadBalancing.LoadBalancingClient(Photon.ConnectionProtocol.Wss, "fdd578f2-f3c3-4089-bcda-f34576e0b095", "1.0");
 
@@ -26,7 +31,7 @@ function create() {
         console.log("State:", state);
     };
 
-    client.onEvent = function(code, content, actorNr) {
+    client.onEvent = (code, content, actorNr) => {
         if (code === 1) {
             if (content.playerId !== player.id) {
                 if (!otherPlayers[content.playerId]) {
@@ -38,12 +43,12 @@ function create() {
         }
     };
 
-    client.connectToRegionMaster("us");
-
     client.onJoinRoom = () => {
         player = createPlayer();
         client.raiseEvent(1, { playerId: player.id, x: player.x, y: player.y });
     };
+
+    client.connectToRegionMaster("us");
 
     this.input.on('pointermove', pointer => {
         if (player) {
@@ -58,9 +63,11 @@ function update() {
 }
 
 function createPlayer() {
-    return this.physics.add.image(400, 300, 'player');
+    const playerSprite = this.add.image(400, 300, 'player');
+    console.log('Player created:', playerSprite);
+    return playerSprite;
 }
 
 function createOtherPlayer(x, y) {
-    return this.physics.add.image(x, y, 'player');
+    return this.add.image(x, y, 'player');  // Ensure the 'this' context is correct
 }
