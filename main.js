@@ -64,6 +64,11 @@ function create() {
         removePlayer(player.actorNr);
     };
 
+    client.onPlayerDisconnected = function(player) {
+        console.log("Player disconnected:", player.actorNr);
+        removePlayer(player.actorNr);
+    };
+
     client.onError = function(errorCode, errorMsg) {
         console.log(`Error: ${errorCode} - ${errorMsg}`);
     };
