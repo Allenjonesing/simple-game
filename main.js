@@ -16,6 +16,8 @@ let player;
 let otherPlayers = {};
 let cursors;
 let client;
+const disconnectionTimeout = 5000;  // Timeout period in milliseconds
+let disconnectTimeouts = {};
 
 function preload() {
     this.load.image('player', 'assets/playerShip.png');  // Ensure the path is correct
@@ -61,12 +63,12 @@ function create() {
 
     client.onPlayerLeftRoom = function(player) {
         console.log("Player left room:", player.actorNr);
-        removePlayer(player.actorNr);
+        schedulePlayerRemoval(player.actorNr);
     };
 
     client.onPlayerDisconnected = function(player) {
         console.log("Player disconnected:", player.actorNr);
-        removePlayer(player.actorNr);
+        schedulePlayerRemoval(player.actorNr);
     };
 
     client.onError = function(errorCode, errorMsg) {
@@ -170,6 +172,16 @@ function createOtherPlayer(x, y, scene) {
     const otherPlayerSprite = scene.add.image(x, y, 'player');
     console.log('Other player created:', otherPlayerSprite);
     return otherPlayerSprite;
+}
+
+function schedulePlayerRemoval(actorNr) {
+    if (disconnectTimeouts[actorNr]) {
+        clearTimeout(disconnectTimeouts[actorNr]);
+    }
+    disconnectTimeouts[actorNr] = setTimeout(() => {
+        removePlayer(actorNr);
+        delete disconnectTimeouts[actorNr];
+    }, disconnectionTimeout);
 }
 
 function removePlayer(actorNr) {
