@@ -60,10 +60,24 @@ function create() {
 
     client.onRoomListUpdate = function(rooms) {
         console.log("Room list updated:", rooms);
+        if (rooms.length === 0) {
+            console.log("No rooms available. Creating a new room.");
+            createRoom();
+        } else {
+            console.log("Joining existing room.");
+            client.joinRandomRoom();
+        }
     };
 
     client.onRoomList = function(rooms) {
         console.log("Room list received:", rooms);
+        if (rooms.length === 0) {
+            console.log("No rooms available in list. Creating a new room.");
+            createRoom();
+        } else {
+            console.log("Joining existing room from list.");
+            client.joinRandomRoom();
+        }
     };
 
     client.onJoinRoomFailed = function(errorCode, errorMsg) {
@@ -74,7 +88,7 @@ function create() {
 
     client.onConnectedToMaster = function() {
         console.log("Connected to master server");
-        client.joinRandomRoom();
+        client.joinLobby();
     };
 
     function createRoom() {
