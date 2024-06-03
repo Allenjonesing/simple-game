@@ -1,1 +1,6 @@
 node_modules/*
+lib/Photon-Javascript_Emscripten_SDK.js
+lib/Photon-Javascript_Emscripten_SDK.min.js
+lib/Photon-Javascript_SDK.d.ts
+lib/Photon-Javascript_SDK.js
+lib/Photon-Javascript_SDK.min.js
