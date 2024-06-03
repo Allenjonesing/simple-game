@@ -20,7 +20,7 @@ function preload() {
 }
 
 function create() {
-    const client = new Photon.LoadBalancing.LoadBalancingClient(Photon.ConnectionProtocol.Wss, "your_app_id", "1.0");
+    const client = new Photon.LoadBalancing.LoadBalancingClient(Photon.ConnectionProtocol.Wss, "fdd578f2-f3c3-4089-bcda-f34576e0b095", "1.0");
 
     client.onStateChange = function(state) {
         console.log("State:", state);
@@ -38,7 +38,7 @@ function create() {
         }
     };
 
-    client.connectToRegionMaster("your_region");
+    client.connectToRegionMaster("us");
 
     client.onJoinRoom = function() {
         player = createPlayer();
