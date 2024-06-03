@@ -40,9 +40,9 @@ function create() {
 
     client.connectToRegionMaster("us");
 
-    client.onJoinRoom = function() {
+    client.onJoinRoom = () => {
         player = createPlayer();
-        this.raiseEvent(1, { playerId: player.id, x: player.x, y: player.y });
+        client.raiseEvent(1, { playerId: player.id, x: player.x, y: player.y });
     };
 
     this.input.on('pointermove', pointer => {
