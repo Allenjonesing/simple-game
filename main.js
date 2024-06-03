@@ -16,7 +16,7 @@ let player;
 let otherPlayers = {};
 let cursors;
 let client;
-const disconnectionTimeout = 5000;  // Timeout period in milliseconds
+const disconnectionTimeout = 5;  // Timeout period in milliseconds
 let disconnectTimeouts = {};
 
 function preload() {
