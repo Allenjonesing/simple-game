@@ -112,12 +112,6 @@ function create() {
         client.joinLobby();
     };
 
-    // Ensure all PhotonPeer status handlers are registered
-    client._dispatchPeerStatus = function(statusCode, message) {
-        console.log(`PhotonPeer status: ${statusCode} - ${message}`);
-        // Add any additional handlers if necessary
-    };
-
     function createRoom() {
         const roomOptions = {
             isVisible: true,
@@ -134,7 +128,7 @@ function create() {
     cursors = this.input.keyboard.createCursorKeys();
 
     // Add some static objects
-    this.add.text(10, 10, 'Welcome to the game v2!', { font: '16px Arial', fill: '#ffffff' });
+    this.add.text(10, 10, 'Welcome to the game v3!', { font: '16px Arial', fill: '#ffffff' });
 
     // Add some animated objects
     const star = this.add.star(400, 300, 5, 20, 40, 0xffffff, 0.5);
