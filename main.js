@@ -18,7 +18,7 @@ let cursors;
 let client;
 
 function preload() {
-    this.load.image('player', 'assets/playerShip.png');  // Add a valid path to your player image
+    this.load.image('player', 'assets/playerShip.png');  // Ensure the path is correct
     console.log('Preloading assets...');
     this.load.on('complete', () => {
         console.log('Assets loaded successfully.');
@@ -27,18 +27,19 @@ function preload() {
 
 function create() {
     console.log('Creating game scene...');
+    const scene = this;  // Preserve scene context
     client = new Photon.LoadBalancing.LoadBalancingClient(Photon.ConnectionProtocol.Wss, "fdd578f2-f3c3-4089-bcda-f34576e0b095", "1.0");
 
     client.onStateChange = function(state) {
         console.log("State:", state);
     };
 
-    client.onEvent = (code, content, actorNr) => {
+    client.onEvent = function(code, content, actorNr) {
         console.log("Event received:", code, content);
         if (code === 1) {
             if (content.playerId !== player.id) {
                 if (!otherPlayers[content.playerId]) {
-                    otherPlayers[content.playerId] = createOtherPlayer(content.x, content.y, this);
+                    otherPlayers[content.playerId] = createOtherPlayer(content.x, content.y, scene);
                 } else {
                     otherPlayers[content.playerId].setPosition(content.x, content.y);
                 }
@@ -46,9 +47,9 @@ function create() {
         }
     };
 
-    client.onJoinRoom = () => {
+    client.onJoinRoom = function() {
         console.log("Joined room");
-        player = createPlayer(this);
+        player = createPlayer(scene);
         console.log('Player ID:', player.id);
         client.raiseEvent(1, { playerId: player.id, x: player.x, y: player.y });
     };
