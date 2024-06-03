@@ -14,6 +14,7 @@ const config = {
 const game = new Phaser.Game(config);
 let player;
 let otherPlayers = {};
+let cursors;
 let client;
 
 function preload() {
@@ -37,7 +38,7 @@ function create() {
         if (code === 1) {
             if (content.playerId !== player.id) {
                 if (!otherPlayers[content.playerId]) {
-                    otherPlayers[content.playerId] = createOtherPlayer(content.x, content.y, this.scene);
+                    otherPlayers[content.playerId] = createOtherPlayer(content.x, content.y, this);
                 } else {
                     otherPlayers[content.playerId].setPosition(content.x, content.y);
                 }
@@ -48,6 +49,7 @@ function create() {
     client.onJoinRoom = () => {
         console.log("Joined room");
         player = createPlayer(this);
+        console.log('Player ID:', player.id);
         client.raiseEvent(1, { playerId: player.id, x: player.x, y: player.y });
     };
 
@@ -85,6 +87,9 @@ function create() {
 
     client.connectToRegionMaster("us");
 
+    // Add keyboard input
+    cursors = this.input.keyboard.createCursorKeys();
+
     // Add some static objects
     this.add.text(10, 10, 'Welcome to the game!', { font: '16px Arial', fill: '#ffffff' });
 
@@ -106,7 +111,22 @@ function create() {
 }
 
 function update() {
-    // Game loop logic here
+    if (player) {
+        if (cursors.left.isDown) {
+            player.x -= 5;
+        } else if (cursors.right.isDown) {
+            player.x += 5;
+        }
+
+        if (cursors.up.isDown) {
+            player.y -= 5;
+        } else if (cursors.down.isDown) {
+            player.y += 5;
+        }
+
+        // Broadcast player position to other clients
+        client.raiseEvent(1, { playerId: player.id, x: player.x, y: player.y });
+    }
 }
 
 function createPlayer(scene) {
