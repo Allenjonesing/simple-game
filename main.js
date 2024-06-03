@@ -53,11 +53,13 @@ function create() {
         console.log("Joined room");
         player = createPlayer(scene);
         console.log('Player ID:', player.id);
+        setCustomPlayerProperties(client.myActor().actorNr, { playerId: player.id, state: 'active' });
         client.raiseEvent(1, { playerId: player.id, x: player.x, y: player.y });
     };
 
     client.onLeaveRoom = function() {
         console.log("Left room");
+        setCustomPlayerProperties(client.myActor().actorNr, { state: 'disconnected' });
         removePlayer(client.myActor().actorNr);
     };
 
@@ -68,6 +70,7 @@ function create() {
 
     client.onPlayerDisconnected = function(player) {
         console.log("Player disconnected:", player.actorNr);
+        setCustomPlayerProperties(player.actorNr, { state: 'disconnected' });
         schedulePlayerRemoval(player.actorNr);
     };
 
@@ -113,7 +116,7 @@ function create() {
             isVisible: true,
             isOpen: true,
             maxPlayers: 10,
-            PlayerTtl: 60000  // Keep player data for 1 minute after disconnection
+            playerTtl: 60000  // Keep player data for 1 minute after disconnection
         };
         client.createRoom("myTestRoom", roomOptions);
     }
@@ -194,5 +197,13 @@ function removePlayer(actorNr) {
         player.destroy();
         player = null;
         console.log('Self player removed:', actorNr);
+    }
+}
+
+function setCustomPlayerProperties(actorNr, properties) {
+    const actor = client.myRoomActors()[actorNr];
+    if (actor) {
+        actor.setCustomProperties(properties);
+        console.log('Set custom properties for actor:', actorNr, properties);
     }
 }
