@@ -177,5 +177,9 @@ function removePlayer(actorNr) {
         otherPlayers[actorNr].destroy();
         delete otherPlayers[actorNr];
         console.log('Player removed:', actorNr);
+    } else if (player && player.id === actorNr) {
+        player.destroy();
+        player = null;
+        console.log('Self player removed:', actorNr);
     }
 }
