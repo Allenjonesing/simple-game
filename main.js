@@ -16,7 +16,7 @@ let player;
 let otherPlayers = {};
 let cursors;
 let client;
-const disconnectionTimeout = 5;  // Timeout period in milliseconds
+const disconnectionTimeout = 5000;  // Timeout period in milliseconds
 let disconnectTimeouts = {};
 
 function preload() {
@@ -32,6 +32,7 @@ function create() {
     const scene = this;  // Preserve scene context
     client = new Photon.LoadBalancing.LoadBalancingClient(Photon.ConnectionProtocol.Wss, "fdd578f2-f3c3-4089-bcda-f34576e0b095", "1.0");
 
+    // Registering all connection-related event handlers
     client.onStateChange = function(state) {
         console.log("State:", state);
     };
@@ -109,6 +110,12 @@ function create() {
     client.onConnectedToMaster = function() {
         console.log("Connected to master server");
         client.joinLobby();
+    };
+
+    // Ensure all PhotonPeer status handlers are registered
+    client._dispatchPeerStatus = function(statusCode, message) {
+        console.log(`PhotonPeer status: ${statusCode} - ${message}`);
+        // Add any additional handlers if necessary
     };
 
     function createRoom() {
