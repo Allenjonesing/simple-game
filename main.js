@@ -16,7 +16,7 @@ let player;
 let otherPlayers = {};
 
 function preload() {
-    this.load.image('player', 'assests/playerShip.png');  // Add a valid path to your player image
+    this.load.image('player', 'assets/playerShip.png');  // Add a valid path to your player image
 }
 
 function create() {
