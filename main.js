@@ -54,6 +54,16 @@ function create() {
         client.raiseEvent(1, { playerId: player.id, x: player.x, y: player.y });
     };
 
+    client.onLeaveRoom = function() {
+        console.log("Left room");
+        removePlayer(client.myActor().actorNr);
+    };
+
+    client.onPlayerLeftRoom = function(player) {
+        console.log("Player left room:", player.actorNr);
+        removePlayer(player.actorNr);
+    };
+
     client.onError = function(errorCode, errorMsg) {
         console.log(`Error: ${errorCode} - ${errorMsg}`);
     };
@@ -155,4 +165,12 @@ function createOtherPlayer(x, y, scene) {
     const otherPlayerSprite = scene.add.image(x, y, 'player');
     console.log('Other player created:', otherPlayerSprite);
     return otherPlayerSprite;
+}
+
+function removePlayer(actorNr) {
+    if (otherPlayers[actorNr]) {
+        otherPlayers[actorNr].destroy();
+        delete otherPlayers[actorNr];
+        console.log('Player removed:', actorNr);
+    }
 }
