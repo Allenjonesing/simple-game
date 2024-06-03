@@ -112,7 +112,8 @@ function create() {
         const roomOptions = {
             isVisible: true,
             isOpen: true,
-            maxPlayers: 10
+            maxPlayers: 10,
+            PlayerTtl: 60000  // Keep player data for 1 minute after disconnection
         };
         client.createRoom("myTestRoom", roomOptions);
     }
