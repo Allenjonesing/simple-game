@@ -12,6 +12,12 @@ const config = {
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
+    },
+    physics: {
+        default: 'arcade',
+        arcade: {
+            debug: false
+        }
     }
 };
 
@@ -40,7 +46,7 @@ function preload() {
 function create() {
     const scene = this;
 
-    client = new Photon.LoadBalancing.LoadBalancingClient(Photon.ConnectionProtocol.Wss, "your_app_id", "1.0");
+    client = new Photon.LoadBalancing.LoadBalancingClient(Photon.ConnectionProtocol.Wss, "fdd578f2-f3c3-4089-bcda-f34576e0b095", "1.0");
 
     client.onStateChange = function(state) {
         console.log("State:", state);
