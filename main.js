@@ -26,6 +26,7 @@ let scoreText;
 let timeText;
 let score = 0;
 let timeSurvived = 0;
+let isHost = false;
 const disconnectionTimeout = 5000;
 let disconnectTimeouts = {};
 
@@ -57,6 +58,8 @@ function create() {
                 spawnEnemyAt(content.x, content.y, content.enemyType, scene);
             } else if (content.type === 'fireProjectile') {
                 fireProjectileAt(content.x, content.y, scene);
+            } else if (content.type === 'syncState') {
+                syncGameState(content.state, scene);
             }
         }
     };
@@ -64,6 +67,11 @@ function create() {
     client.onJoinRoom = function() {
         player = createPlayer(scene);
         client.raiseEvent(1, { type: 'playerMove', playerId: player.id, x: player.x, y: player.y });
+
+        if (client.myActor().actorNr === client.myRoomMaster().actorNr) {
+            isHost = true;
+            console.log("You are the host.");
+        }
     };
 
     client.onLeaveRoom = function() {
@@ -131,7 +139,7 @@ function create() {
 
     this.time.addEvent({
         delay: 1000,
-        callback: spawnEnemy,
+        callback: hostSpawnEnemy,
         callbackScope: this,
         loop: true
     });
@@ -139,6 +147,13 @@ function create() {
     this.time.addEvent({
         delay: 300,
         callback: autoFire,
+        callbackScope: this,
+        loop: true
+    });
+
+    this.time.addEvent({
+        delay: 1000,
+        callback: syncGameStateToClients,
         callbackScope: this,
         loop: true
     });
@@ -179,12 +194,26 @@ function fireProjectile(x, y) {
     projectiles.push(projectile);
 }
 
-function spawnEnemy() {
-    const x = Phaser.Math.Between(0, game.config.width);
-    const y = 0;
-    const enemyType = Phaser.Math.Between(1, 3);
-    spawnEnemyAt(x, y, enemyType);
-    client.raiseEvent(1, { type: 'spawnEnemy', x, y, enemyType });
+function fireProjectileAt(x, y, scene) {
+    const projectile = scene.add.circle(x, y, 5, 0x0000ff);
+    projectile.speed = 5;
+    projectiles.push(projectile);
+}
+
+function hostSpawnEnemy() {
+    if (isHost) {
+        const x = Phaser.Math.Between(0, game.config.width);
+        const y = 0;
+        const enemyType = Phaser.Math.Between(1, 3);
+        spawnEnemyAt(x, y, enemyType);
+        client.raiseEvent(1, { type: 'spawnEnemy', x, y, enemyType });
+    }
+}
+
+function spawnEnemyAt(x, y, enemyType, scene = game.scene.scenes[0]) {
+    const enemy = scene.add.image(x, y, `enemy${enemyType}`).setScale(0.1);
+    enemy.speed = 2;
+    enemies.push(enemy);
 }
 
 function updateEnemies() {
@@ -221,38 +250,6 @@ function updateTime() {
     timeText.setText('Time: ' + timeSurvived);
 }
 
-function createPlayer(scene) {
-    const playerSprite = scene.add.image(game.config.width / 2, game.config.height - 50, 'player').setScale(0.1);
-    playerSprite.id = client.myActor().actorNr;
-    return playerSprite;
-}
-
-function createOtherPlayer(x, y, scene) {
-    const otherPlayerSprite = scene.add.image(x, y, 'player').setScale(0.1);
-    return otherPlayerSprite;
-}
-
-
-function removePlayer(actorNr) {
-    if (otherPlayers[actorNr]) {
-        otherPlayers[actorNr].destroy();
-        delete otherPlayers[actorNr];
-    } else if (player && player.id === actorNr) {
-        player.destroy();
-        player = null;
-    }
-}
-
-function hostSpawnEnemy() {
-    if (isHost) {
-        const x = Phaser.Math.Between(0, game.config.width);
-        const y = 0;
-        const enemyType = Phaser.Math.Between(1, 3);
-        spawnEnemyAt(x, y, enemyType);
-        client.raiseEvent(1, { type: 'spawnEnemy', x, y, enemyType });
-    }
-}
-
 function syncGameStateToClients() {
     if (isHost) {
         const gameState = {
@@ -276,19 +273,17 @@ function syncGameState(state, scene) {
 
     scoreText.setText('Score: ' + score);
     timeText.setText('Time: ' + timeSurvived);
-
 }
 
-function fireProjectileAt(x, y, scene) {
-    const projectile = scene.add.circle(x, y, 5, 0x0000ff);
-    projectile.speed = 5;
-    projectiles.push(projectile);
+function createPlayer(scene) {
+    const playerSprite = scene.add.image(game.config.width / 2, game.config.height - 50, 'player').setScale(0.1);
+    playerSprite.id = client.myActor().actorNr;
+    return playerSprite;
 }
 
-function spawnEnemyAt(x, y, enemyType, scene = game.scene.scenes[0]) {
-    const enemy = scene.add.image(x, y, `enemy${enemyType}`).setScale(0.1);
-    enemy.speed = 2;
-    enemies.push(enemy);
+function createOtherPlayer(x, y, scene) {
+    const otherPlayerSprite = scene.add.image(x, y, 'player').setScale(0.1);
+    return otherPlayerSprite;
 }
 
 function schedulePlayerRemoval(actorNr) {
@@ -299,4 +294,14 @@ function schedulePlayerRemoval(actorNr) {
         removePlayer(actorNr);
         delete disconnectTimeouts[actorNr];
     }, disconnectionTimeout);
+}
+
+function removePlayer(actorNr) {
+    if (otherPlayers[actorNr]) {
+        otherPlayers[actorNr].destroy();
+        delete otherPlayers[actorNr];
+    } else if (player && player.id === actorNr) {
+        player.destroy();
+        player = null;
+    }
 }
