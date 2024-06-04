@@ -12,20 +12,14 @@ const config = {
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
-    },
-    physics: {
-        default: 'arcade',
-        arcade: {
-            debug: false
-        }
     }
 };
 
 const game = new Phaser.Game(config);
 let player;
 let otherPlayers = {};
-let enemies;
-let projectiles;
+let enemies = [];
+let projectiles = [];
 let cursors;
 let client;
 let scoreText;
@@ -132,16 +126,12 @@ function create() {
         loop: true
     });
 
-    enemies = this.physics.add.group();
     this.time.addEvent({
         delay: 1000,
         callback: spawnEnemy,
         callbackScope: this,
         loop: true
     });
-
-    projectiles = this.physics.add.group();
-    this.physics.add.collider(enemies, projectiles, hitEnemy, null, this);
 
     this.time.addEvent({
         delay: 300,
@@ -167,6 +157,9 @@ function update() {
 
         client.raiseEvent(1, { playerId: player.id, x: player.x, y: player.y });
     }
+
+    updateEnemies();
+    updateProjectiles();
 }
 
 function autoFire() {
@@ -176,17 +169,39 @@ function autoFire() {
 }
 
 function fireProjectile(x, y) {
-    const projectile = this.physics.add.image(x, y, 'projectile').setScale(0.05);
+    const projectile = this.add.image(x, y, 'projectile').setScale(0.05);
     projectile.setVelocityY(-300);
-    projectiles.add(projectile);
+    projectiles.push(projectile);
 }
 
 function spawnEnemy() {
     const x = Phaser.Math.Between(0, game.config.width);
     const y = 0;
-    const enemy = this.physics.add.image(x, y, `enemy${Phaser.Math.Between(1, 3)}`).setScale(0.1);
+    const enemy = this.add.image(x, y, `enemy${Phaser.Math.Between(1, 3)}`).setScale(0.1);
     enemy.setVelocityY(100);
-    enemies.add(enemy);
+    enemies.push(enemy);
+}
+
+function updateEnemies() {
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const enemy = enemies[i];
+        enemy.y += 2;
+        if (enemy.y > game.config.height) {
+            enemy.destroy();
+            enemies.splice(i, 1);
+        }
+    }
+}
+
+function updateProjectiles() {
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        const projectile = projectiles[i];
+        projectile.y -= 5;
+        if (projectile.y < 0) {
+            projectile.destroy();
+            projectiles.splice(i, 1);
+        }
+    }
 }
 
 function hitEnemy(enemy, projectile) {
