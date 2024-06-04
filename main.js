@@ -179,24 +179,12 @@ function fireProjectile(x, y) {
     projectiles.push(projectile);
 }
 
-function fireProjectileAt(x, y, scene) {
-    const projectile = scene.add.circle(x, y, 5, 0x0000ff);
-    projectile.speed = 5;
-    projectiles.push(projectile);
-}
-
 function spawnEnemy() {
     const x = Phaser.Math.Between(0, game.config.width);
     const y = 0;
     const enemyType = Phaser.Math.Between(1, 3);
     spawnEnemyAt(x, y, enemyType);
     client.raiseEvent(1, { type: 'spawnEnemy', x, y, enemyType });
-}
-
-function spawnEnemyAt(x, y, enemyType, scene = game.scene.scenes[0]) {
-    const enemy = scene.add.image(x, y, `enemy${enemyType}`).setScale(0.1);
-    enemy.speed = 2;
-    enemies.push(enemy);
 }
 
 function updateEnemies() {
@@ -244,15 +232,6 @@ function createOtherPlayer(x, y, scene) {
     return otherPlayerSprite;
 }
 
-function schedulePlayerRemoval(actorNr) {
-    if (disconnectTimeouts[actorNr]) {
-        clearTimeout(disconnectTimeouts[actorNr]);
-    }
-    disconnectTimeouts[actorNr] = setTimeout(() => {
-        removePlayer(actorNr);
-        delete disconnectTimeouts[actorNr];
-    }, disconnectionTimeout);
-}
 
 function removePlayer(actorNr) {
     if (otherPlayers[actorNr]) {
@@ -262,4 +241,62 @@ function removePlayer(actorNr) {
         player.destroy();
         player = null;
     }
+}
+
+function hostSpawnEnemy() {
+    if (isHost) {
+        const x = Phaser.Math.Between(0, game.config.width);
+        const y = 0;
+        const enemyType = Phaser.Math.Between(1, 3);
+        spawnEnemyAt(x, y, enemyType);
+        client.raiseEvent(1, { type: 'spawnEnemy', x, y, enemyType });
+    }
+}
+
+function syncGameStateToClients() {
+    if (isHost) {
+        const gameState = {
+            enemies: enemies.map(enemy => ({ x: enemy.x, y: enemy.y, type: enemy.texture.key })),
+            projectiles: projectiles.map(proj => ({ x: proj.x, y: proj.y })),
+            score,
+            timeSurvived
+        };
+        client.raiseEvent(1, { type: 'syncState', state: gameState });
+    }
+}
+
+function syncGameState(state, scene) {
+    enemies.forEach(enemy => enemy.destroy());
+    projectiles.forEach(proj => proj.destroy());
+
+    enemies = state.enemies.map(e => spawnEnemyAt(e.x, e.y, e.type, scene));
+    projectiles = state.projectiles.map(p => fireProjectileAt(p.x, p.y, scene));
+    score = state.score;
+    timeSurvived = state.timeSurvived;
+
+    scoreText.setText('Score: ' + score);
+    timeText.setText('Time: ' + timeSurvived);
+
+}
+
+function fireProjectileAt(x, y, scene) {
+    const projectile = scene.add.circle(x, y, 5, 0x0000ff);
+    projectile.speed = 5;
+    projectiles.push(projectile);
+}
+
+function spawnEnemyAt(x, y, enemyType, scene = game.scene.scenes[0]) {
+    const enemy = scene.add.image(x, y, `enemy${enemyType}`).setScale(0.1);
+    enemy.speed = 2;
+    enemies.push(enemy);
+}
+
+function schedulePlayerRemoval(actorNr) {
+    if (disconnectTimeouts[actorNr]) {
+        clearTimeout(disconnectTimeouts[actorNr]);
+    }
+    disconnectTimeouts[actorNr] = setTimeout(() => {
+        removePlayer(actorNr);
+        delete disconnectTimeouts[actorNr];
+    }, disconnectionTimeout);
 }
