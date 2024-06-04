@@ -22,7 +22,15 @@ client.onJoinRoom = function () {
 client.onStateChange = function (state) {
     console.log("State:", state);
     if (state === Photon.LoadBalancing.LoadBalancingClient.State.JoinedLobby) {
-        client.joinOrCreateRoom("exampleRoom");
+        client.createRoom({ roomName: "exampleRoom" });
+    } else if (state === Photon.LoadBalancing.LoadBalancingClient.State.Disconnected) {
+        client.connectToRegionMaster("us");
+    }
+};
+
+client.onError = function (errorCode, errorMessage) {
+    if (errorCode === Photon.LoadBalancing.Constants.ErrorCode.GameDoesNotExist) {
+        client.joinRoom("exampleRoom");
     }
 };
 
