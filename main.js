@@ -12,7 +12,15 @@ client.onEvent = function (code, content, actorNr) {
 };
 
 client.onJoinRoom = function () {
+    console.log("Joined room");
     players[client.myActor().actorNr] = { x: 100, y: 100, color: '#' + Math.floor(Math.random() * 16777215).toString(16) };
+};
+
+client.onStateChange = function (state) {
+    console.log("State:", state);
+    if (state === Photon.LoadBalancing.LoadBalancingClient.State.JoinedLobby) {
+        client.createRoom("exampleRoom");
+    }
 };
 
 client.connectToRegionMaster("us");
