@@ -47,19 +47,23 @@ function create() {
 
     client.onEvent = function(code, content, actorNr) {
         if (code === 1) {
-            if (content.playerId !== player.id) {
+            if (content.type === 'playerMove') {
                 if (!otherPlayers[content.playerId]) {
                     otherPlayers[content.playerId] = createOtherPlayer(content.x, content.y, scene);
                 } else {
                     otherPlayers[content.playerId].setPosition(content.x, content.y);
                 }
+            } else if (content.type === 'spawnEnemy') {
+                spawnEnemyAt(content.x, content.y, content.enemyType, scene);
+            } else if (content.type === 'fireProjectile') {
+                fireProjectileAt(content.x, content.y, scene);
             }
         }
     };
 
     client.onJoinRoom = function() {
         player = createPlayer(scene);
-        client.raiseEvent(1, { playerId: player.id, x: player.x, y: player.y });
+        client.raiseEvent(1, { type: 'playerMove', playerId: player.id, x: player.x, y: player.y });
     };
 
     client.onLeaveRoom = function() {
@@ -154,7 +158,7 @@ function update() {
             player.y += 5;
         }
 
-        client.raiseEvent(1, { playerId: player.id, x: player.x, y: player.y });
+        client.raiseEvent(1, { type: 'playerMove', playerId: player.id, x: player.x, y: player.y });
     }
 
     updateEnemies();
@@ -164,6 +168,7 @@ function update() {
 function autoFire() {
     if (player) {
         fireProjectile(player.x, player.y - 20);
+        client.raiseEvent(1, { type: 'fireProjectile', x: player.x, y: player.y - 20 });
     }
 }
 
@@ -174,11 +179,22 @@ function fireProjectile(x, y) {
     projectiles.push(projectile);
 }
 
+function fireProjectileAt(x, y, scene) {
+    const projectile = scene.add.circle(x, y, 5, 0x0000ff);
+    projectile.speed = 5;
+    projectiles.push(projectile);
+}
+
 function spawnEnemy() {
-    const scene = game.scene.scenes[0];
     const x = Phaser.Math.Between(0, game.config.width);
     const y = 0;
-    const enemy = scene.add.image(x, y, `enemy${Phaser.Math.Between(1, 3)}`).setScale(0.1);
+    const enemyType = Phaser.Math.Between(1, 3);
+    spawnEnemyAt(x, y, enemyType);
+    client.raiseEvent(1, { type: 'spawnEnemy', x, y, enemyType });
+}
+
+function spawnEnemyAt(x, y, enemyType, scene = game.scene.scenes[0]) {
+    const enemy = scene.add.image(x, y, `enemy${enemyType}`).setScale(0.1);
     enemy.speed = 2;
     enemies.push(enemy);
 }
