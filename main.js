@@ -276,12 +276,12 @@ function syncGameStateToClients() {
 
 function syncGameState(state, scene) {
     enemies.forEach(enemy => {
-        if (enemy.destroy) {
+        if (enemy &&enemy.destroy) {
             enemy.destroy();
         }
     });
     projectiles.forEach(proj => {
-        if (proj.destroy) {
+        if (proj && proj.destroy) {
             proj.destroy();
         }
     });
