@@ -40,91 +40,7 @@ function preload() {
 function create() {
     const scene = this;
 
-    client = new Photon.LoadBalancing.LoadBalancingClient(Photon.ConnectionProtocol.Wss, "fdd578f2-f3c3-4089-bcda-f34576e0b095", "1.0");
-
-    client.onStateChange = function(state) {
-        console.log("State:", state);
-    };
-
-    client.onEvent = function(code, content, actorNr) {
-        if (code === 1) {
-            if (content.type === 'playerMove') {
-                if (!otherPlayers[content.playerId]) {
-                    otherPlayers[content.playerId] = createOtherPlayer(content.x, content.y, scene);
-                } else {
-                    otherPlayers[content.playerId].setPosition(content.x, content.y);
-                }
-            } else if (content.type === 'spawnEnemy') {
-                spawnEnemyAt(content.x, content.y, content.enemyType, scene);
-            } else if (content.type === 'fireProjectile') {
-                fireProjectileAt(content.x, content.y, scene);
-            } else if (content.type === 'syncState') {
-                syncGameState(content.state, scene);
-            }
-        }
-    };
-        
-    client.onJoinRoom = function() {
-        player = createPlayer(scene);
-        client.raiseEvent(1, { type: 'playerMove', playerId: player.id, x: player.x, y: player.y });
-    
-        if (client.myActor().actorNr === client.myRoom().masterClientId) {
-            isHost = true;
-            console.log("You are the host.");
-        }
-    };
-    
-    client.onLeaveRoom = function() {
-        removePlayer(client.myActor().actorNr);
-    };
-    
-    client.onPlayerLeftRoom = function(player) {
-        schedulePlayerRemoval(player.actorNr);
-    };
-    
-    client.onPlayerDisconnected = function(player) {
-        schedulePlayerRemoval(player.actorNr);
-    };
-
-    client.onError = function(errorCode, errorMsg) {
-        console.log(`Error: ${errorCode} - ${errorMsg}`);
-    };
-
-    client.onRoomListUpdate = function(rooms) {
-        if (rooms.length === 0) {
-            createRoom();
-        } else {
-            client.joinRandomRoom();
-        }
-    };
-
-    client.onRoomList = function(rooms) {
-        if (rooms.length === 0) {
-            createRoom();
-        } else {
-            client.joinRandomRoom();
-        }
-    };
-
-    client.onJoinRoomFailed = function(errorCode, errorMsg) {
-        createRoom();
-    };
-
-    client.onConnectedToMaster = function() {
-        client.joinLobby();
-    };
-
-    function createRoom() {
-        const roomOptions = {
-            isVisible: true,
-            isOpen: true,
-            maxPlayers: 10,
-            playerTtl: 60000
-        };
-        client.createRoom(`room_${Math.floor(Math.random() * 10000)}`, roomOptions);
-    }
-
-    client.connectToRegionMaster("us");
+    setupPhotonClient(scene);
 
     cursors = this.input.keyboard.createCursorKeys();
 
@@ -202,12 +118,6 @@ function fireProjectileAt(x, y, scene) {
     projectiles.push(projectile);
 }
 
-function fireProjectileAt(x, y, scene) {
-    const projectile = scene.add.circle(x, y, 5, 0x0000ff);
-    projectile.speed = 5;
-    projectiles.push(projectile);
-}
-
 function updateEnemies() {
     for (let i = enemies.length - 1; i >= 0; i--) {
         const enemy = enemies[i];
@@ -220,7 +130,7 @@ function updateEnemies() {
         }
     }
 }
-
+    
 function updateProjectiles() {
     for (let i = projectiles.length - 1; i >= 0; i--) {
         const projectile = projectiles[i];
