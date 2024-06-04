@@ -26,11 +26,16 @@ client.onStateChange = function (state) {
     }
 };
 
-client.onError = function (errorCode, errorMessage) {
-    console.error("Error:", errorCode, errorMessage);
+client.onJoinRoomFailed = function (errorCode, errorMessage) {
+    console.error("Join Room Failed:", errorCode, errorMessage);
     if (errorCode === Photon.LoadBalancing.Constants.ErrorCode.GameDoesNotExist) {
         client.createRoom("exampleRoom");
-    } else if (errorCode === Photon.LoadBalancing.Constants.ErrorCode.GameIdAlreadyExists) {
+    }
+};
+
+client.onCreateRoomFailed = function (errorCode, errorMessage) {
+    console.error("Create Room Failed:", errorCode, errorMessage);
+    if (errorCode === Photon.LoadBalancing.Constants.ErrorCode.GameIdAlreadyExists) {
         client.joinRoom("exampleRoom");
     }
 };
@@ -98,11 +103,4 @@ window.addEventListener('keydown', (event) => {
     switch (event.key) {
         case 'ArrowUp': player.y -= 10; break;
         case 'ArrowDown': player.y += 10; break;
-        case 'ArrowLeft': player.x -= 10; break;
-        case 'ArrowRight': player.x += 10; break;
-    }
-
-    client.raiseEvent(1, { id: client.myActor().actorNr, x: player.x, y: player.y });
-});
-
-gameLoop();
+        case 'ArrowLeft': player.x -
