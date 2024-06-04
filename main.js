@@ -77,11 +77,11 @@ function create() {
     client.onLeaveRoom = function() {
         removePlayer(client.myActor().actorNr);
     };
-
+    
     client.onPlayerLeftRoom = function(player) {
         schedulePlayerRemoval(player.actorNr);
     };
-
+    
     client.onPlayerDisconnected = function(player) {
         schedulePlayerRemoval(player.actorNr);
     };
@@ -182,32 +182,10 @@ function update() {
 
 function autoFire() {
     if (player) {
-        fireProjectile(player.x, player.y - 20);
-        client.raiseEvent(1, { type: 'fireProjectile', x: player.x, y: player.y - 20 });
-    }
-}
-
-function fireProjectile(x, y) {
-    const scene = game.scene.scenes[0];
-    const projectile = scene.add.circle(x, y, 5, 0x0000ff);
-    projectile.speed = 5;
-    projectiles.push(projectile);
-    client.raiseEvent(1, { type: 'fireProjectile', x: x, y: y });
-}
-
-function fireProjectileAt(x, y, scene) {
-    const projectile = scene.add.circle(x, y, 5, 0x0000ff);
-    projectile.speed = 5;
-    projectiles.push(projectile);
-}
-
-function hostSpawnEnemy() {
-    if (isHost) {
-        const x = Phaser.Math.Between(0, game.config.width);
-        const y = 0;
-        const enemyType = Phaser.Math.Between(1, 3);
-        const enemy = spawnEnemyAt(x, y, enemyType);
-        client.raiseEvent(1, { type: 'spawnEnemy', x: x, y: y, enemyType: enemyType });
+        const x = player.x;
+        const y = player.y - 20;
+        fireProjectile(x, y);
+        client.raiseEvent(1, { type: 'fireProjectile', x: x, y: y });
     }
 }
 
@@ -216,6 +194,20 @@ function spawnEnemyAt(x, y, enemyType, scene = game.scene.scenes[0]) {
     enemy.speed = 2;
     enemies.push(enemy);
     return enemy;
+}
+
+function fireProjectile(x, y) {
+    const scene = game.scene.scenes[0];
+    const projectile = scene.add.circle(x, y, 5, 0x0000ff);
+    projectile.speed = 5;
+    projectiles.push({ projectile: projectile, ownerId: player.id });
+    client.raiseEvent(1, { type: 'fireProjectile', x: x, y: y });
+}
+
+function fireProjectileAt(x, y, scene) {
+    const projectile = scene.add.circle(x, y, 5, 0x0000ff);
+    projectile.speed = 5;
+    projectiles.push({ projectile: projectile, ownerId: null });
 }
 
 function updateEnemies() {
@@ -233,7 +225,8 @@ function updateEnemies() {
 
 function updateProjectiles() {
     for (let i = projectiles.length - 1; i >= 0; i--) {
-        const projectile = projectiles[i];
+        const projData = projectiles[i];
+        const projectile = projData.projectile;
         if (projectile) {
             projectile.y -= projectile.speed;
             if (projectile.y < 0) {
@@ -254,6 +247,16 @@ function hitEnemy(enemy, projectile) {
 function updateTime() {
     timeSurvived += 1;
     timeText.setText('Time: ' + timeSurvived);
+}
+
+function hostSpawnEnemy() {
+    if (isHost) {
+        const x = Phaser.Math.Between(0, game.config.width);
+        const y = 0;
+        const enemyType = Phaser.Math.Between(1, 3);
+        const enemy = spawnEnemyAt(x, y, enemyType);
+        client.raiseEvent(1, { type: 'spawnEnemy', x: x, y: y, enemyType: enemyType });
+    }
 }
 
 function syncGameStateToClients() {
