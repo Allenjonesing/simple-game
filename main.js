@@ -107,15 +107,34 @@ function autoFire() {
 
 function fireProjectile(x, y) {
     const scene = game.scene.scenes[0];
+    const projectileId = generateUniqueId();
     const projectile = scene.add.circle(x, y, 5, 0x0000ff);
     projectile.speed = 5;
+    projectile.id = projectileId;
+    projectiles.push(projectile);
+    client.raiseEvent(1, { type: 'fireProjectile', x: x, y: y, projectileId: projectileId });
+}
+
+function fireProjectileAt(x, y, projectileId, scene) {
+    const projectile = scene.add.circle(x, y, 5, 0x0000ff);
+    projectile.speed = 5;
+    projectile.id = projectileId;
     projectiles.push(projectile);
 }
 
-function fireProjectileAt(x, y, scene) {
-    const projectile = scene.add.circle(x, y, 5, 0x0000ff);
-    projectile.speed = 5;
-    projectiles.push(projectile);
+function destroyProjectile(projectileId) {
+    const projectileIndex = projectiles.findIndex(proj => proj.id === projectileId);
+    if (projectileIndex !== -1) {
+        const projectile = projectiles[projectileIndex];
+        if (projectile) {
+            projectile.destroy();
+            projectiles.splice(projectileIndex, 1);
+        }
+    }
+}
+
+function generateUniqueId() {
+    return '_' + Math.random().toString(36).substr(2, 9);
 }
 
 function updateEnemies() {
@@ -137,8 +156,8 @@ function updateProjectiles() {
         if (projectile) {
             projectile.y -= projectile.speed;
             if (projectile.y < 0) {
-                projectile.destroy();
-                projectiles.splice(i, 1);
+                destroyProjectile(projectile.id);
+                client.raiseEvent(1, { type: 'destroyProjectile', projectileId: projectile.id });
             }
         }
     }
@@ -251,10 +270,13 @@ function setupPhotonClient(scene) {
                     spawnEnemyAt(content.x, content.y, content.enemyType, scene);
                     break;
                 case 'fireProjectile':
-                    fireProjectileAt(content.x, content.y, scene);
+                    fireProjectileAt(content.x, content.y, content.projectileId, scene);
                     break;
                 case 'syncState':
                     syncGameState(content.state, scene);
+                    break;
+                case 'destroyProjectile':
+                    destroyProjectile(content.projectileId);
                     break;
             }
         }
