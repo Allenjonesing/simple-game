@@ -189,19 +189,17 @@ function autoFire() {
     }
 }
 
-function spawnEnemyAt(x, y, enemyType, scene = game.scene.scenes[0]) {
-    const enemy = scene.add.image(x, y, `enemy${enemyType}`).setScale(0.1);
-    enemy.speed = 2;
-    enemies.push(enemy);
-    return enemy;
-}
-
 function fireProjectile(x, y) {
     const scene = game.scene.scenes[0];
     const projectile = scene.add.circle(x, y, 5, 0x0000ff);
     projectile.speed = 5;
-    projectiles.push({ projectile: projectile, ownerId: player.id });
-    client.raiseEvent(1, { type: 'fireProjectile', x: x, y: y });
+    projectiles.push(projectile);
+}
+
+function fireProjectileAt(x, y, scene) {
+    const projectile = scene.add.circle(x, y, 5, 0x0000ff);
+    projectile.speed = 5;
+    projectiles.push(projectile);
 }
 
 function fireProjectileAt(x, y, scene) {
@@ -216,9 +214,7 @@ function updateEnemies() {
         if (enemy) {
             enemy.y += enemy.speed;
             if (enemy.y > game.config.height) {
-                if (enemy.destroy) {
-                    enemy.destroy();
-                }
+                enemy.destroy();
                 enemies.splice(i, 1);
             }
         }
@@ -231,9 +227,7 @@ function updateProjectiles() {
         if (projectile) {
             projectile.y -= projectile.speed;
             if (projectile.y < 0) {
-                if (projectile.destroy) {
-                    projectile.destroy();
-                }
+                projectile.destroy();
                 projectiles.splice(i, 1);
             }
         }
@@ -275,16 +269,8 @@ function syncGameStateToClients() {
 }
 
 function syncGameState(state, scene) {
-    enemies.forEach(enemy => {
-        if (enemy &&enemy.destroy) {
-            enemy.destroy();
-        }
-    });
-    projectiles.forEach(proj => {
-        if (proj && proj.destroy) {
-            proj.destroy();
-        }
-    });
+    enemies.forEach(enemy => enemy.destroy());
+    projectiles.forEach(proj => proj.destroy());
 
     enemies = state.enemies.map(e => spawnEnemyAt(e.x, e.y, e.type, scene));
     projectiles = state.projectiles.map(p => fireProjectileAt(p.x, p.y, scene));
