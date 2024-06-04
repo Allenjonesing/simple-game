@@ -63,7 +63,7 @@ function create() {
             }
         }
     };
-
+    
     client.onJoinRoom = function() {
         player = createPlayer(scene);
         client.raiseEvent(1, { type: 'playerMove', playerId: player.id, x: player.x, y: player.y });
@@ -192,6 +192,7 @@ function fireProjectile(x, y) {
     const projectile = scene.add.circle(x, y, 5, 0x0000ff);
     projectile.speed = 5;
     projectiles.push(projectile);
+    client.raiseEvent(1, { type: 'fireProjectile', x: x, y: y });
 }
 
 function fireProjectileAt(x, y, scene) {
@@ -205,8 +206,8 @@ function hostSpawnEnemy() {
         const x = Phaser.Math.Between(0, game.config.width);
         const y = 0;
         const enemyType = Phaser.Math.Between(1, 3);
-        spawnEnemyAt(x, y, enemyType);
-        client.raiseEvent(1, { type: 'spawnEnemy', x, y, enemyType });
+        const enemy = spawnEnemyAt(x, y, enemyType);
+        client.raiseEvent(1, { type: 'spawnEnemy', x: x, y: y, enemyType: enemyType });
     }
 }
 
@@ -214,6 +215,7 @@ function spawnEnemyAt(x, y, enemyType, scene = game.scene.scenes[0]) {
     const enemy = scene.add.image(x, y, `enemy${enemyType}`).setScale(0.1);
     enemy.speed = 2;
     enemies.push(enemy);
+    return enemy;
 }
 
 function updateEnemies() {
