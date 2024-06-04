@@ -219,10 +219,12 @@ function spawnEnemyAt(x, y, enemyType, scene = game.scene.scenes[0]) {
 function updateEnemies() {
     for (let i = enemies.length - 1; i >= 0; i--) {
         const enemy = enemies[i];
-        enemy.y += enemy.speed;
-        if (enemy.y > game.config.height) {
-            enemy.destroy();
-            enemies.splice(i, 1);
+        if (enemy) {
+            enemy.y += enemy.speed;
+            if (enemy.y > game.config.height) {
+                enemy.destroy();
+                enemies.splice(i, 1);
+            }
         }
     }
 }
@@ -230,10 +232,12 @@ function updateEnemies() {
 function updateProjectiles() {
     for (let i = projectiles.length - 1; i >= 0; i--) {
         const projectile = projectiles[i];
-        projectile.y -= projectile.speed;
-        if (projectile.y < 0) {
-            projectile.destroy();
-            projectiles.splice(i, 1);
+        if (projectile) {
+            projectile.y -= projectile.speed;
+            if (projectile.y < 0) {
+                projectile.destroy();
+                projectiles.splice(i, 1);
+            }
         }
     }
 }
