@@ -67,8 +67,8 @@ function create() {
     client.onJoinRoom = function() {
         player = createPlayer(scene);
         client.raiseEvent(1, { type: 'playerMove', playerId: player.id, x: player.x, y: player.y });
-
-        if (client.myActor().actorNr === client.myRoomMaster().actorNr) {
+    
+        if (client.myActor().actorNr === client.myRoom().getMasterClientId()) {
             isHost = true;
             console.log("You are the host.");
         }
