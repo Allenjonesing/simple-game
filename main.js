@@ -63,7 +63,7 @@ function create() {
             }
         }
     };
-    
+        
     client.onJoinRoom = function() {
         player = createPlayer(scene);
         client.raiseEvent(1, { type: 'playerMove', playerId: player.id, x: player.x, y: player.y });
@@ -192,13 +192,13 @@ function fireProjectile(x, y) {
     const projectile = scene.add.circle(x, y, 5, 0x0000ff);
     projectile.speed = 5;
     projectiles.push(projectile);
-    client.raiseEvent(1, { type: 'fireProjectile', x: x, y: y });
+    client.raiseEvent(1, { type: 'fireProjectile', x: x, y: y, id: client.myActor().actorNr });
 }
 
-function fireProjectileAt(x, y, scene) {
+function fireProjectileAt(x, y, id, scene) {
     const projectile = scene.add.circle(x, y, 5, 0x0000ff);
     projectile.speed = 5;
-    projectiles.push(projectile);
+    projectiles.push({ projectile, id });
 }
 
 function hostSpawnEnemy() {
@@ -233,7 +233,7 @@ function updateEnemies() {
 
 function updateProjectiles() {
     for (let i = projectiles.length - 1; i >= 0; i--) {
-        const projectile = projectiles[i];
+        const projectile = projectiles[i].projectile; // Ensure projectile is accessed correctly
         if (projectile) {
             projectile.y -= projectile.speed;
             if (projectile.y < 0) {
@@ -315,6 +315,22 @@ function removePlayer(actorNr) {
 function setupPhotonClient(scene) {
     client = new Photon.LoadBalancing.LoadBalancingClient(Photon.ConnectionProtocol.Wss, "fdd578f2-f3c3-4089-bcda-f34576e0b095", "1.0");
 
+    client.addPeerStatusListener(Photon.PhotonPeer.StatusCodes.connect, function() {
+        console.log("Connected to Photon server.");
+    });
+    client.addPeerStatusListener(Photon.PhotonPeer.StatusCodes.disconnect, function() {
+        console.log("Disconnected from Photon server.");
+    });
+    client.addPeerStatusListener(Photon.PhotonPeer.StatusCodes.connectFailed, function() {
+        console.log("Failed to connect to Photon server.");
+    });
+    client.addPeerStatusListener(Photon.PhotonPeer.StatusCodes.error, function() {
+        console.log("An error occurred with the Photon connection.");
+    });
+    client.onUnhandledEvent = function(eventCode, args) {
+        console.log("Unhandled event received:", eventCode, args);
+    };
+    
     client.onStateChange = function(state) {
         console.log("State:", state);
     };
@@ -340,13 +356,13 @@ function setupPhotonClient(scene) {
     client.onJoinRoom = function() {
         player = createPlayer(scene);
         client.raiseEvent(1, { type: 'playerMove', playerId: player.id, x: player.x, y: player.y });
-
+    
         if (client.myActor().actorNr === client.myRoom().masterClientId) {
             isHost = true;
             console.log("You are the host.");
         }
     };
-
+    
     client.onLeaveRoom = function() {
         removePlayer(client.myActor().actorNr);
     };
