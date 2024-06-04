@@ -207,7 +207,7 @@ function fireProjectile(x, y) {
 function fireProjectileAt(x, y, scene) {
     const projectile = scene.add.circle(x, y, 5, 0x0000ff);
     projectile.speed = 5;
-    projectiles.push({ projectile: projectile, ownerId: null });
+    projectiles.push(projectile);
 }
 
 function updateEnemies() {
@@ -216,7 +216,9 @@ function updateEnemies() {
         if (enemy) {
             enemy.y += enemy.speed;
             if (enemy.y > game.config.height) {
-                enemy.destroy();
+                if (enemy.destroy) {
+                    enemy.destroy();
+                }
                 enemies.splice(i, 1);
             }
         }
@@ -225,12 +227,13 @@ function updateEnemies() {
 
 function updateProjectiles() {
     for (let i = projectiles.length - 1; i >= 0; i--) {
-        const projData = projectiles[i];
-        const projectile = projData.projectile;
+        const projectile = projectiles[i];
         if (projectile) {
             projectile.y -= projectile.speed;
             if (projectile.y < 0) {
-                projectile.destroy();
+                if (projectile.destroy) {
+                    projectile.destroy();
+                }
                 projectiles.splice(i, 1);
             }
         }
@@ -272,8 +275,16 @@ function syncGameStateToClients() {
 }
 
 function syncGameState(state, scene) {
-    enemies.forEach(enemy => enemy.destroy());
-    projectiles.forEach(proj => proj.destroy());
+    enemies.forEach(enemy => {
+        if (enemy.destroy) {
+            enemy.destroy();
+        }
+    });
+    projectiles.forEach(proj => {
+        if (proj.destroy) {
+            proj.destroy();
+        }
+    });
 
     enemies = state.enemies.map(e => spawnEnemyAt(e.x, e.y, e.type, scene));
     projectiles = state.projectiles.map(p => fireProjectileAt(p.x, p.y, scene));
