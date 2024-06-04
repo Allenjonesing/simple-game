@@ -103,4 +103,11 @@ window.addEventListener('keydown', (event) => {
     switch (event.key) {
         case 'ArrowUp': player.y -= 10; break;
         case 'ArrowDown': player.y += 10; break;
-        case 'ArrowLeft': player.x -
+        case 'ArrowLeft': player.x -= 10; break;
+        case 'ArrowRight': player.x += 10; break;
+    }
+
+    client.raiseEvent(1, { id: client.myActor().actorNr, x: player.x, y: player.y });
+});
+
+gameLoop();
