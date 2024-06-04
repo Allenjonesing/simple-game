@@ -166,6 +166,14 @@ function hostSpawnEnemy() {
     }
 }
 
+function spawnEnemyAt(x, y, enemyType, scene = game.scene.scenes[0]) {
+    const enemy = scene.add.image(x, y, `enemy${enemyType}`).setScale(0.1);
+    enemy.speed = 2;
+    enemies.push(enemy);
+    return enemy;
+}
+
+
 function syncGameStateToClients() {
     if (isHost) {
         const gameState = {
@@ -231,18 +239,23 @@ function setupPhotonClient(scene) {
 
     client.onEvent = function (code, content, actorNr) {
         if (code === 1) {
-            if (content.type === 'playerMove') {
-                if (!otherPlayers[content.playerId]) {
-                    otherPlayers[content.playerId] = createOtherPlayer(content.x, content.y, scene);
-                } else {
-                    otherPlayers[content.playerId].setPosition(content.x, content.y);
-                }
-            } else if (content.type === 'spawnEnemy') {
-                spawnEnemyAt(content.x, content.y, content.enemyType, scene);
-            } else if (content.type === 'fireProjectile') {
-                fireProjectileAt(content.x, content.y, scene);
-            } else if (content.type === 'syncState') {
-                syncGameState(content.state, scene);
+            switch (content.type) {
+                case 'playerMove':
+                    if (!otherPlayers[content.playerId]) {
+                        otherPlayers[content.playerId] = createOtherPlayer(content.x, content.y, scene);
+                    } else {
+                        otherPlayers[content.playerId].setPosition(content.x, content.y);
+                    }
+                    break;
+                case 'spawnEnemy':
+                    spawnEnemyAt(content.x, content.y, content.enemyType, scene);
+                    break;
+                case 'fireProjectile':
+                    fireProjectileAt(content.x, content.y, scene);
+                    break;
+                case 'syncState':
+                    syncGameState(content.state, scene);
+                    break;
             }
         }
     };
