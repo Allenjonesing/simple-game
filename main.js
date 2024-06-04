@@ -168,19 +168,17 @@ function autoFire() {
 }
 
 function fireProjectile(x, y) {
-    const projectile = this.add.graphics();
-    projectile.fillStyle(0x0000ff, 1.0);
-    projectile.fillCircle(0, 0, 5);
-    projectile.x = x;
-    projectile.y = y;
+    const scene = game.scene.scenes[0];
+    const projectile = scene.add.circle(x, y, 5, 0x0000ff);
     projectile.speed = 5;
     projectiles.push(projectile);
 }
 
 function spawnEnemy() {
+    const scene = game.scene.scenes[0];
     const x = Phaser.Math.Between(0, game.config.width);
     const y = 0;
-    const enemy = this.add.image(x, y, `enemy${Phaser.Math.Between(1, 3)}`).setScale(0.1);
+    const enemy = scene.add.image(x, y, `enemy${Phaser.Math.Between(1, 3)}`).setScale(0.1);
     enemy.speed = 2;
     enemies.push(enemy);
 }
