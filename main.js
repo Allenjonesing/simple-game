@@ -8,6 +8,9 @@ client.onEvent = function (code, content, actorNr) {
         case 1: // Player moved
             movePlayer(content.id, content.x, content.y);
             break;
+        case 2: // NPC moved
+            moveNPC(content.x, content.y);
+            break;
     }
 };
 
@@ -19,13 +22,14 @@ client.onJoinRoom = function () {
 client.onStateChange = function (state) {
     console.log("State:", state);
     if (state === Photon.LoadBalancing.LoadBalancingClient.State.JoinedLobby) {
-        client.createRoom("exampleRoom");
+        client.joinOrCreateRoom("exampleRoom");
     }
 };
 
 client.connectToRegionMaster("us");
 
 let players = {};
+let npc = { x: 200, y: 200, color: 'red' };
 let canvas = document.createElement('canvas');
 let context = canvas.getContext('2d');
 document.body.appendChild(canvas);
@@ -45,6 +49,10 @@ function gameLoop() {
         context.fillStyle = player.color;
         context.fillRect(player.x, player.y, 50, 50);
     }
+    // Draw NPC
+    context.fillStyle = npc.color;
+    context.fillRect(npc.x, npc.y, 50, 50);
+
     requestAnimationFrame(gameLoop);
 }
 
@@ -60,6 +68,19 @@ function movePlayer(id, x, y) {
         players[id].y = y;
     }
 }
+
+function moveNPC(x, y) {
+    npc.x = x;
+    npc.y = y;
+}
+
+function randomMoveNPC() {
+    npc.x += Math.random() * 20 - 10;
+    npc.y += Math.random() * 20 - 10;
+    client.raiseEvent(2, { x: npc.x, y: npc.y });
+}
+
+setInterval(randomMoveNPC, 1000);
 
 window.addEventListener('keydown', (event) => {
     let player = players[client.myActor().actorNr];
