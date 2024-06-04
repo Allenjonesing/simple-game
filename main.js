@@ -1,6 +1,8 @@
-const appId = "fdd578f2-f3c3-4089-bcda-f34576e0b095"; // Replace with your App ID
+const appId = "fdd578f2-f3c3-4089-bcda-f34576e0b095"; // Your App ID
+const appVersion = "1.0";
 
-const client = new Photon.LoadBalancing.LoadBalancingClient(Photon.ConnectionProtocol.Wss, appId, "1.0");
+const client = new Photon.LoadBalancing.LoadBalancingClient(Photon.ConnectionProtocol.Ws, appId, appVersion);
+
 client.onEvent = function (code, content, actorNr) {
     switch (code) {
         case 1: // Player moved
@@ -8,6 +10,11 @@ client.onEvent = function (code, content, actorNr) {
             break;
     }
 };
+
+client.onJoinRoom = function () {
+    players[client.myActor().actorNr] = { x: 100, y: 100, color: '#' + Math.floor(Math.random() * 16777215).toString(16) };
+};
+
 client.connectToRegionMaster("us");
 
 let players = {};
@@ -59,9 +66,5 @@ window.addEventListener('keydown', (event) => {
 
     client.raiseEvent(1, { id: client.myActor().actorNr, x: player.x, y: player.y });
 });
-
-client.onJoinRoom = function () {
-    players[client.myActor().actorNr] = { x: 100, y: 100, color: '#' + Math.floor(Math.random() * 16777215).toString(16) };
-};
 
 gameLoop();
