@@ -20,7 +20,7 @@ client.onJoinRoom = function () {
 };
 
 client.onStateChange = function (state) {
-    console.log("State:", state);
+    console.log("State changed to:", state);
     if (state === Photon.LoadBalancing.LoadBalancingClient.State.JoinedLobby) {
         client.joinRoom("exampleRoom");
     }
