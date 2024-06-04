@@ -1,7 +1,7 @@
 const appId = "fdd578f2-f3c3-4089-bcda-f34576e0b095"; // Your App ID
 const appVersion = "1.0";
 
-const client = new Photon.LoadBalancing.LoadBalancingClient(Photon.ConnectionProtocol.Ws, appId, appVersion);
+const client = new Photon.LoadBalancing.LoadBalancingClient(Photon.ConnectionProtocol.Wss, appId, appVersion);
 
 client.onEvent = function (code, content, actorNr) {
     switch (code) {
