@@ -34,7 +34,6 @@ function preload() {
     this.load.image('enemy1', 'assets/enemy1.png');
     this.load.image('enemy2', 'assets/enemy2.png');
     this.load.image('enemy3', 'assets/enemy3.png');
-    this.load.image('projectile', 'assets/projectile.png');
 }
 
 function create() {
@@ -169,8 +168,12 @@ function autoFire() {
 }
 
 function fireProjectile(x, y) {
-    const projectile = this.add.image(x, y, 'projectile').setScale(0.05);
-    projectile.setVelocityY(-300);
+    const projectile = this.add.graphics();
+    projectile.fillStyle(0x0000ff, 1.0);
+    projectile.fillCircle(0, 0, 5);
+    projectile.x = x;
+    projectile.y = y;
+    projectile.speed = 5;
     projectiles.push(projectile);
 }
 
@@ -178,14 +181,14 @@ function spawnEnemy() {
     const x = Phaser.Math.Between(0, game.config.width);
     const y = 0;
     const enemy = this.add.image(x, y, `enemy${Phaser.Math.Between(1, 3)}`).setScale(0.1);
-    enemy.setVelocityY(100);
+    enemy.speed = 2;
     enemies.push(enemy);
 }
 
 function updateEnemies() {
     for (let i = enemies.length - 1; i >= 0; i--) {
         const enemy = enemies[i];
-        enemy.y += 2;
+        enemy.y += enemy.speed;
         if (enemy.y > game.config.height) {
             enemy.destroy();
             enemies.splice(i, 1);
@@ -196,7 +199,7 @@ function updateEnemies() {
 function updateProjectiles() {
     for (let i = projectiles.length - 1; i >= 0; i--) {
         const projectile = projectiles[i];
-        projectile.y -= 5;
+        projectile.y -= projectile.speed;
         if (projectile.y < 0) {
             projectile.destroy();
             projectiles.splice(i, 1);
