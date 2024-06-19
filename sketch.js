@@ -169,17 +169,9 @@ async function generateEnemyImage(newsArticle, setting) {
         }
 
         const data = await response.json();
-        if (data && data.data && data.data.length > 0) {
-            console.log('generateEnemyImage... data.data[0].url: ', data.data[0].url);
-            const imageUrl = data.data[0].url;
-            console.log('generateEnemyImage... imageUrl: ', imageUrl);
-            return new Promise((resolve) => {
-                console.log('generateEnemyImage Resolution...');
-                imageToBase64(imageUrl, (base64Image) => {
-                    console.log('generateEnemyImage... Base64 Image:', base64Image); // Log the Base64 string for debugging
-                    resolve(base64Image);
-                });
-            });
+        if (data && data.base64_image) {
+            console.log('generateEnemyImage... Base64 Image:', data.base64_image);
+            return data.base64_image;
         } else {
             throw new Error('No image generated');
         }
@@ -303,12 +295,12 @@ async function generateAIResponses(newsData, personas, setting) {
                         throw new Error('Network response was not ok');
                     }
 
-                    const imageAIResponse = await imageResponse.json();
-
-                    if (imageAIResponse && imageAIResponse.data && imageAIResponse.data.length && imageAIResponse.data[0] && imageAIResponse.data[0].url) {
-                        const imageUrl = imageAIResponse.data[0].url;
-                        responses.push({ response: textContent, persona: persona, imageUrl: imageUrl });
-                        displayAIResponse(news.title, textContent, persona, imageUrl);
+                    const data = await imageResponse.json();
+                    if (data && data.base64_image) {
+                        console.log('generateEnemyImage... Base64 Image:', data.base64_image);
+                        const imageBase64 = data.base64_image;
+                        responses.push({ response: textContent, persona: persona, imageBase64: imageBase64 });
+                        displayAIResponse(news.title, textContent, persona, imageBase64);
                     }
                 } catch (error) {
                     console.error('Error generating AI response:', error);
@@ -324,7 +316,7 @@ async function generateAIResponses(newsData, personas, setting) {
     return responses;
 }
 
-async function displayAIResponse(newsTitle, aiResponse, persona, imageUrl) {
+async function displayAIResponse(newsTitle, aiResponse, persona, imageBase64) {
     const newsContainer = document.getElementById('news');
     const newsItem = document.createElement('div');
     newsItem.className = 'news-item';
@@ -337,13 +329,13 @@ async function displayAIResponse(newsTitle, aiResponse, persona, imageUrl) {
     contentElement.textContent = aiResponse;
     newsItem.appendChild(contentElement);
 
-    if (imageUrl) {
+    if (imageBase64) {
         const imageElement = document.createElement('img');
         imageElement.setAttribute("id", "enemyImage");
-        imageElement.src = imageUrl;
+        imageElement.src = imageBase64;
         imageElement.alt = 'Generated image';
         newsItem.appendChild(imageElement);
-        enemySpriteUrl = imageUrl;
+        enemyBase64Image = imageBase64;
     }
 
     const personaElement = document.createElement('p');
@@ -351,12 +343,6 @@ async function displayAIResponse(newsTitle, aiResponse, persona, imageUrl) {
     newsItem.appendChild(personaElement);
 
     newsContainer.appendChild(newsItem);
-    // base64Image = await imageToBase64(imageUrl, (base64Image) => {
-    //     return base64Image;
-    // });
-
-    enemyBase64Image = await robustGetBase64Image('enemyImage'); // Get the Base64 data from the image in the DOM
-    
     spawnEnemies();
 
 }
