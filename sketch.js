@@ -296,6 +296,7 @@ async function generateAIResponses(newsData, personas, setting) {
                     }
 
                     const data = await imageResponse.json();
+                    console.log('data: ', data);
                     if (data && data.base64_image) {
                         console.log('generateEnemyImage... Base64 Image:', data.base64_image);
                         const imageBase64 = data.base64_image;
