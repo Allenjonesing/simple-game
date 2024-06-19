@@ -298,9 +298,10 @@ async function generateAIResponses(newsData, personas, setting) {
                     const data = await imageResponse.json();
                     const parsedBody = JSON.parse(data.body);
                     if (parsedBody && parsedBody.base64_image) {
+                        let base64String =  `data:image/png;base64,${parsedBody.base64_image}`
                         console.log('generateEnemyImage... parsedBody.base64_image: ', parsedBody.base64_image);
-                        responses.push({ response: textContent, persona: persona, imageBase64: parsedBody.base64_image });
-                        displayAIResponse(news.title, textContent, persona, parsedBody.base64_image);
+                        responses.push({ response: textContent, persona: persona, imageBase64: base64String });
+                        displayAIResponse(news.title, textContent, persona, base64String);
                     } else {
                         throw new Error('No image generated');
                     }                } catch (error) {
