@@ -26,8 +26,6 @@ function setup() {
                 let y = random(50, 550);
                 npcs.push(new NPC(x, y, personas[i % personas.length]));
             }
-            enemyBase64Image = getBase64Image('enemyImage'); // Get the Base64 data from the image in the DOM
-            spawnEnemies();
         });
     });
 }
@@ -372,6 +370,10 @@ async function displayAIResponse(newsTitle, aiResponse, persona, imageUrl) {
     base64Image = await imageToBase64(imageUrl, (base64Image) => {
         return base64Image;
     });
+
+    enemyBase64Image = getBase64Image('enemyImage'); // Get the Base64 data from the image in the DOM
+    spawnEnemies();
+
 }
 
 async function generatePersonas(setting) {
