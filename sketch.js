@@ -295,15 +295,14 @@ async function generateAIResponses(newsData, personas, setting) {
                         throw new Error('Network response was not ok');
                     }
 
-                    const data = await imageResponse.json();
-                    console.log('data: ', data);
-                    if (data && data.base64_image) {
-                        console.log('generateEnemyImage... Base64 Image:', data.base64_image);
-                        const imageBase64 = data.base64_image;
-                        responses.push({ response: textContent, persona: persona, imageBase64: imageBase64 });
-                        displayAIResponse(news.title, textContent, persona, imageBase64);
-                    }
-                } catch (error) {
+                    const data = await response.json();
+                    const parsedBody = JSON.parse(data.body);
+                    if (parsedBody && parsedBody.base64_image) {
+                        console.log('generateEnemyImage... base64_image: ', parsedBody.base64_image);
+                        return parsedBody.base64_image;
+                    } else {
+                        throw new Error('No image generated');
+                    }                } catch (error) {
                     console.error('Error generating AI response:', error);
                     newsContainer.innerHTML += `<div class="error-message">Error generating AI response for article "${news.title}": ${error.message}</div>`;
                 }
