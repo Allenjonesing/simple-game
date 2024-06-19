@@ -201,7 +201,7 @@ function getBase64Image(imgElementID) {
         return dataURL;
     } else {
         console.error('No IMG element found!');
-        return 'ERROR';
+        return '';
     }
 }
 
@@ -367,11 +367,11 @@ async function displayAIResponse(newsTitle, aiResponse, persona, imageUrl) {
     newsItem.appendChild(personaElement);
 
     newsContainer.appendChild(newsItem);
-    base64Image = await imageToBase64(imageUrl, (base64Image) => {
+    enemyBase64Image = await imageToBase64(imageUrl, (base64Image) => {
         return base64Image;
     });
 
-    enemyBase64Image = getBase64Image('enemyImage'); // Get the Base64 data from the image in the DOM
+    //enemyBase64Image = getBase64Image('enemyImage'); // Get the Base64 data from the image in the DOM
     spawnEnemies();
 
 }
