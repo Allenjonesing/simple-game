@@ -1,113 +1,63 @@
-const appId = "fdd578f2-f3c3-4089-bcda-f34576e0b095"; // Your App ID
-const appVersion = "1.0";
+// Create the scene
+const scene = new THREE.Scene();
 
-const client = new Photon.LoadBalancing.LoadBalancingClient(Photon.ConnectionProtocol.Wss, appId, appVersion);
+// Create an orthographic camera
+const aspectRatio = window.innerWidth / window.innerHeight;
+const camera = new THREE.OrthographicCamera(
+  -aspectRatio, aspectRatio, 1, -1, 0.1, 1000
+);
+camera.position.set(0, 0, 10);
 
-client.onEvent = function (code, content, actorNr) {
-    switch (code) {
-        case 1: // Player moved
-            movePlayer(content.id, content.x, content.y);
-            break;
-        case 2: // NPC moved
-            moveNPC(content.x, content.y);
-            break;
-    }
-};
+// Create the renderer
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-client.onJoinRoom = function () {
-    console.log("Joined room");
-    players[client.myActor().actorNr] = { x: 100, y: 100, color: '#' + Math.floor(Math.random() * 16777215).toString(16) };
-};
+// Create a simple square plane as the player
+const playerGeometry = new THREE.PlaneGeometry(0.2, 0.2);
+const playerMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const player = new THREE.Mesh(playerGeometry, playerMaterial);
+player.position.set(0, 0, 0);
+scene.add(player);
 
-client.onStateChange = function (state) {
-    console.log("State changed to:", state);
-    if (state === Photon.LoadBalancing.LoadBalancingClient.State.JoinedLobby) {
-        client.joinRoom("exampleRoom");
-    }
-};
-
-client.onJoinRoomFailed = function (errorCode, errorMessage) {
-    console.error("Join Room Failed:", errorCode, errorMessage);
-    if (errorCode === Photon.LoadBalancing.Constants.ErrorCode.GameDoesNotExist) {
-        client.createRoom("exampleRoom");
-    }
-};
-
-client.onCreateRoomFailed = function (errorCode, errorMessage) {
-    console.error("Create Room Failed:", errorCode, errorMessage);
-    if (errorCode === Photon.LoadBalancing.Constants.ErrorCode.GameIdAlreadyExists) {
-        client.joinRoom("exampleRoom");
-    }
-};
-
-client.connectToRegionMaster("us");
-
-let players = {};
-let npc = { x: 200, y: 200, color: 'red' };
-let canvas = document.createElement('canvas');
-let context = canvas.getContext('2d');
-document.body.appendChild(canvas);
-
-window.addEventListener('resize', resizeCanvas, false);
-resizeCanvas();
-
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-
-function gameLoop() {
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    for (let id in players) {
-        let player = players[id];
-        context.fillStyle = player.color;
-        context.fillRect(player.x, player.y, 50, 50);
-    }
-    // Draw NPC
-    context.fillStyle = npc.color;
-    context.fillRect(npc.x, npc.y, 50, 50);
-
-    requestAnimationFrame(gameLoop);
-}
-
-function movePlayer(id, x, y) {
-    if (!players[id]) {
-        players[id] = {
-            x: x,
-            y: y,
-            color: '#' + Math.floor(Math.random() * 16777215).toString(16)
-        };
-    } else {
-        players[id].x = x;
-        players[id].y = y;
-    }
-}
-
-function moveNPC(x, y) {
-    npc.x = x;
-    npc.y = y;
-}
-
-function randomMoveNPC() {
-    npc.x += Math.random() * 20 - 10;
-    npc.y += Math.random() * 20 - 10;
-    client.raiseEvent(2, { x: npc.x, y: npc.y });
-}
-
-setInterval(randomMoveNPC, 1000);
-
-window.addEventListener('keydown', (event) => {
-    let player = players[client.myActor().actorNr];
-    if (!player) return;
-
-    switch (event.key) {
-        case 'ArrowUp': player.y -= 10; break;
-        case 'ArrowDown': player.y += 10; break;
-        case 'ArrowLeft': player.x -= 10; break;
-        case 'ArrowRight': player.x += 10; break;
-    }
-
-    client.raiseEvent(1, { id: client.myActor().actorNr, x: player.x, y: player.y });
+// Handle player movement
+const moveSpeed = 0.05;
+document.addEventListener('keydown', (event) => {
+  switch (event.key) {
+    case 'ArrowUp':
+      player.position.y += moveSpeed;
+      break;
+    case 'ArrowDown':
+      player.position.y -= moveSpeed;
+      break;
+    case 'ArrowLeft':
+      player.position.x -= moveSpeed;
+      break;
+    case 'ArrowRight':
+      player.position.x += moveSpeed;
+      break;
+  }
 });
 
-gameLoop();
+// Create a simple background
+const backgroundGeometry = new THREE.PlaneGeometry(2, 2);
+const backgroundMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
+const background = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+background.position.set(0, 0, -0.1);
+scene.add(background);
+
+// Render loop
+function animate() {
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+animate();
+
+// Handle window resize
+window.addEventListener('resize', () => {
+  const aspectRatio = window.innerWidth / window.innerHeight;
+  camera.left = -aspectRatio;
+  camera.right = aspectRatio;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
