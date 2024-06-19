@@ -355,7 +355,7 @@ async function displayAIResponse(newsTitle, aiResponse, persona, imageUrl) {
     //     return base64Image;
     // });
 
-    enemyBase64Image = getBase64Image('enemyImage'); // Get the Base64 data from the image in the DOM
+    enemyBase64Image = robustGetBase64Image('enemyImage'); // Get the Base64 data from the image in the DOM
     spawnEnemies();
 
 }
@@ -438,3 +438,36 @@ function getBase64Image(imgElementID) {
     }
 }
 
+async function robustGetBase64Image(imgElementID) {
+    console.log('getBase64Image... imgElementID: ', imgElementID);
+    const img = document.getElementById(imgElementID);
+    console.log('getBase64Image... img: ', img);
+
+    if (img) {
+        // Wait until the image is fully loaded
+        return new Promise((resolve, reject) => {
+            img.onload = () => {
+                var canvas = document.createElement("canvas");
+                canvas.width = img.naturalWidth; // Use naturalWidth for correct width
+                canvas.height = img.naturalHeight; // Use naturalHeight for correct height
+                var ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0);
+                var dataURL = canvas.toDataURL();
+                console.log('getBase64Image... dataURL: ', dataURL);
+                resolve(dataURL);
+            };
+
+            img.onerror = () => {
+                reject('Error loading image');
+            };
+
+            // If the image is already loaded, trigger onload manually
+            if (img.complete) {
+                img.onload();
+            }
+        });
+    } else {
+        console.error('No IMG element found!');
+        return 'ERROR';
+    }
+}
