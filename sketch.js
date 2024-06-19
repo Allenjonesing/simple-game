@@ -336,7 +336,7 @@ async function displayAIResponse(newsTitle, aiResponse, persona, imageBase64) {
         imageElement.src = `data:image/png;base64,${imageBase64}`;;
         imageElement.alt = 'Generated image';
         newsItem.appendChild(imageElement);
-        enemyBase64Image = imageBase64;
+        enemyBase64Image = `data:image/png;base64,${imageBase64}`;
     }
 
     const personaElement = document.createElement('p');
