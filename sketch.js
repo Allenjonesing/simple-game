@@ -355,7 +355,8 @@ async function displayAIResponse(newsTitle, aiResponse, persona, imageUrl) {
     //     return base64Image;
     // });
 
-    enemyBase64Image = robustGetBase64Image('enemyImage'); // Get the Base64 data from the image in the DOM
+    enemyBase64Image = await robustGetBase64Image('enemyImage'); // Get the Base64 data from the image in the DOM
+    
     spawnEnemies();
 
 }
