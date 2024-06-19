@@ -418,14 +418,19 @@ async function imageToBase64(url, callback) {
 }
 
 function getBase64Image(imgElementID) {
+    console.log('getBase64Image... imgElementID: ', imgElementID);
     const img = document.getElementById(imgElementID);
     if (img) {
+        console.log('getBase64Image... img: ', img);
         var canvas = document.createElement("canvas");
         canvas.width = img.width;
         canvas.height = img.height;
+        console.log('getBase64Image... img.width: ', img.width);
+        console.log('getBase64Image... img.height: ', img.height);
         var ctx = canvas.getContext("2d");
         ctx.drawImage(img, img.width, img.height);
-        var dataURL = canvas.toDataURL();
+        var dataURL = canvas.toDataURL('image/png');
+        console.log('getBase64Image... dataURL: ', dataURL);
         return dataURL;
     } else {
         console.error('No IMG element found!');
