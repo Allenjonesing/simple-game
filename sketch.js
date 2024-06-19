@@ -196,7 +196,7 @@ async function generateEnemyImage(newsArticle, setting) {
 
 async function fetchNews(personas, setting) {
     console.log('fetchNews... personas: ', personas);
-const loadingMessage = document.getElementById('loading');
+    const loadingMessage = document.getElementById('loading');
     const newsContainer = document.getElementById('news');
 
     loadingMessage.style.display = 'block';
@@ -217,7 +217,7 @@ const loadingMessage = document.getElementById('loading');
             throw new Error('No Data gathered!');
         }
 
-// Parsing the stringified JSON data in the body
+        // Parsing the stringified JSON data in the body
         const bodyData = JSON.parse(jsonData.body);
         
         if (!bodyData) {
@@ -228,15 +228,15 @@ const loadingMessage = document.getElementById('loading');
             throw new Error('No articles found in the body!');
         }
 
-// Limit to 5 articles
+        // Limit to 5 articles
         const structuredNews = structureNewsData(bodyData.articles.sort(() => 0.5 - Math.random()).slice(0, 1));
         let generatedAIResponses = await generateAIResponses(structuredNews, personas, setting);
-loadingMessage.style.display = 'none';
+        loadingMessage.style.display = 'none';
         newsContainer.style.display = 'block';
         return generatedAIResponses;
     } catch (error) {
         console.error('Error fetching news:', error);
-newsContainer.innerHTML = `<div class="error-message">Error fetching news: ${error.message}</div>`;
+        newsContainer.innerHTML = `<div class="error-message">Error fetching news: ${error.message}</div>`;
         loadingMessage.style.display = 'none';
         newsContainer.style.display = 'block';
         return [];
@@ -256,7 +256,7 @@ function structureNewsData(articles) {
 async function generateAIResponses(newsData, personas, setting) {
     console.log('generateAIResponses... newsData: ', newsData);
     console.log('generateAIResponses... personas: ', personas);
-console.log('generateAIResponses... personas.personas: ', personas.personas);
+    console.log('generateAIResponses... personas.personas: ', personas.personas);
     const newsContainer = document.getElementById('news');
     newsContainer.innerHTML = ''; // Clear previous content
     const responses = [];
@@ -264,16 +264,16 @@ console.log('generateAIResponses... personas.personas: ', personas.personas);
     let foundPersonas = [];
     console.log('generateAIResponses... newsData: ', newsData);
     if (personas) {
-console.log('generateAIResponses... personas: ', personas);
+        console.log('generateAIResponses... personas: ', personas);
         console.log('generateAIResponses... personas.personas: ', personas.personas);
         console.log('generateAIResponses... typeof personas.personas: ', typeof personas.personas);
         console.log('generateAIResponses... typeof personas: ', typeof personas);
         console.log('generateAIResponses... personas.length: ', personas.length);
         if (personas.personas && personas.personas.length && typeof personas.personas == 'object') {
-console.log('foundPersonas = personas.personas...');
+            console.log('foundPersonas = personas.personas...');
             foundPersonas = personas.personas;
         } else if (personas.length && typeof personas == 'object') {
-console.log('foundPersonas = personas...');
+            console.log('foundPersonas = personas...');
             foundPersonas = personas;
         } else {
             foundPersonas = ['Bob the Loser', 'John the terrible', 'No Work Terk', 'Jery the dim', 'Jimmy the reclaimer'];
@@ -330,14 +330,12 @@ console.log('foundPersonas = personas...');
                     }
                 } catch (error) {
                     console.error('Error generating AI response:', error);
-                newsContainer.innerHTML += `<div class="error-message">Error generating AI response for article "${news.title}": ${error.message}</div>`;
-                    }
-            
-                    //displayAIResponse(news.title, aiResponse.choices[0].message.content, persona);
+                    newsContainer.innerHTML += `<div class="error-message">Error generating AI response for article "${news.title}": ${error.message}</div>`;
+                }
             }
         } catch (error) {
             console.error('Error generating AI response:', error);
-newsContainer.innerHTML += `<div class="error-message">Error generating AI response for article "${news.title}": ${error.message}</div>`;
+            newsContainer.innerHTML += `<div class="error-message">Error generating AI response for article "${news.title}": ${error.message}</div>`;
         }
     }
 
