@@ -26,6 +26,7 @@ function setup() {
                 let y = random(50, 550);
                 npcs.push(new NPC(x, y, personas[i % personas.length]));
             }
+            enemyBase64Image = getBase64Image('enemyImage'); // Get the Base64 data from the image in the DOM
             spawnEnemies();
         });
     });
@@ -115,7 +116,6 @@ class Enemy {
         this.x = x;
         this.y = y;
         this.size = 40;
-        this.base64Image = base64Image;
         this.image = loadImage(base64Image);
     }
 
@@ -139,7 +139,7 @@ function spawnEnemies() {
     for (let i = 0; i < 3; i++) {
         let x = random(50, 750);
         let y = random(50, 550);
-        enemies.push(new Enemy(x, y, base64Image));
+        enemies.push(new Enemy(x, y, enemyBase64Image));
     }
 }
 
@@ -191,8 +191,24 @@ async function generateEnemyImage(newsArticle, setting) {
     }
 }
 
+function getBase64Image(imgElementID) {
+    const img = document.getElementById(imgElementID);
+    if (img) {
+        var canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        var dataURL = canvas.toDataURL();
+        return dataURL;
+    } else {
+        console.error('No IMG element found!');
+        return 'ERROR';
+    }
+}
+
+
 async function fetchNews(personas, setting) {
-    console.log('fetchNews... personas: ', personas);
     const loadingMessage = document.getElementById('loading');
     const newsContainer = document.getElementById('news');
 
@@ -214,7 +230,6 @@ async function fetchNews(personas, setting) {
             throw new Error('No Data gathered!');
         }
 
-        // Parsing the stringified JSON data in the body
         const bodyData = JSON.parse(jsonData.body);
         
         if (!bodyData) {
@@ -225,7 +240,6 @@ async function fetchNews(personas, setting) {
             throw new Error('No articles found in the body!');
         }
 
-        // Limit to 5 articles
         const structuredNews = structureNewsData(bodyData.articles.sort(() => 0.5 - Math.random()).slice(0, 1));
         let generatedAIResponses = await generateAIResponses(structuredNews, personas, setting);
         loadingMessage.style.display = 'none';
@@ -251,26 +265,15 @@ function structureNewsData(articles) {
 }
 
 async function generateAIResponses(newsData, personas, setting) {
-    console.log('generateAIResponses... newsData: ', newsData);
-    console.log('generateAIResponses... personas: ', personas);
-    console.log('generateAIResponses... personas.personas: ', personas.personas);
     const newsContainer = document.getElementById('news');
-    newsContainer.innerHTML = ''; // Clear previous content
+    newsContainer.innerHTML = ''; 
     const responses = [];
 
     let foundPersonas = [];
-    console.log('generateAIResponses... newsData: ', newsData);
     if (personas) {
-        console.log('generateAIResponses... personas: ', personas);
-        console.log('generateAIResponses... personas.personas: ', personas.personas);
-        console.log('generateAIResponses... typeof personas.personas: ', typeof personas.personas);
-        console.log('generateAIResponses... typeof personas: ', typeof personas);
-        console.log('generateAIResponses... personas.length: ', personas.length);
         if (personas.personas && personas.personas.length && typeof personas.personas == 'object') {
-            console.log('foundPersonas = personas.personas...');
             foundPersonas = personas.personas;
         } else if (personas.length && typeof personas == 'object') {
-            console.log('foundPersonas = personas...');
             foundPersonas = personas;
         } else {
             foundPersonas = ['Bob the Loser', 'John the terrible', 'No Work Terk', 'Jery the dim', 'Jimmy the reclaimer'];
@@ -354,7 +357,7 @@ async function displayAIResponse(newsTitle, aiResponse, persona, imageUrl) {
 
     if (imageUrl) {
         const imageElement = document.createElement('img');
-        imageElement.setAttribute("id", "npc_img");
+        imageElement.setAttribute("id", "enemyImage");
         imageElement.src = imageUrl;
         imageElement.alt = 'Generated image';
         newsItem.appendChild(imageElement);
@@ -367,7 +370,7 @@ async function displayAIResponse(newsTitle, aiResponse, persona, imageUrl) {
 
     newsContainer.appendChild(newsItem);
     base64Image = await imageToBase64(imageUrl, (base64Image) => {
-        resolve(base64Image);
+        return base64Image;
     });
 }
 
@@ -409,62 +412,7 @@ function parsePersonas(content) {
     }
 }
 
-function toDataUrl(url, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.onload = function() {
-        var reader = new FileReader();
-        reader.onloadend = function() {
-            callback(reader.result);
-        }
-        reader.readAsDataURL(xhr.response);
-    };
-    xhr.open('GET', url);
-    xhr.responseType = 'blob';
-    xhr.send();
-}
-
-async function imageUrlToBase64(url) {
-    const data = await fetch(url);
-    const blob = await data.blob();
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(blob);
-        reader.onloadend = () => {
-            const base64data = reader.result;
-            resolve(base64data);
-        };
-        reader.onerror = reject;
-    });
-}
-
-function getBase64Image(imgElementID) {
-    const img = document.getElementById(imgElementID);
-    if (img) {
-        var canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        var ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0);
-        var dataURL = canvas.toDataURL();
-        return dataURL;
-    } else {
-        console.error('No IMG element found!');
-        return 'ERROR';
-    }
-}
-
-async function fetchImageAsBase64(url) {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
-}
-
-function imageToBase64(url, callback) {
+async function imageToBase64(url, callback) {
     let img = new Image();
     img.crossOrigin = 'Anonymous';
     img.onload = function() { 
