@@ -156,7 +156,7 @@ async function generateEnemyImage(newsArticle, setting) {
     const encodedPrompt = encodeURIComponent(prompt);
 
     try {
-        const response = await fetch(`https://bjvbrhjov8.execute-api.us-east-2.amazonaws.com/test/db?prompt=${encodedPrompt}`, {
+        const imageResponse = await fetch(`https://bjvbrhjov8.execute-api.us-east-2.amazonaws.com/test/db?prompt=${encodedPrompt}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -164,14 +164,16 @@ async function generateEnemyImage(newsArticle, setting) {
             body: JSON.stringify({ prompt: prompt, generateImage: true })
         });
 
-        if (!response.ok) {
+        if (!imageResponse.ok) {
             throw new Error('Network response was not ok');
         }
 
-        const data = await response.json();
-        if (data && data.base64_image) {
-            console.log('generateEnemyImage... Base64 Image:', data.base64_image);
-            return data.base64_image;
+        const data = await imageResponse.json();
+        const parsedBody = JSON.parse(data.body);
+        if (parsedBody && parsedBody.base64_image) {
+            let base64String = `data:image/png;base64,${parsedBody.base64_image}`
+            console.log('generateEnemyImage... base64String: ', base64String);
+            return base64String;
         } else {
             throw new Error('No image generated');
         }
@@ -197,15 +199,15 @@ async function fetchNews(personas, setting) {
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        
+
         const jsonData = await response.json();
-        
+
         if (!jsonData) {
             throw new Error('No Data gathered!');
         }
 
         const bodyData = JSON.parse(jsonData.body);
-        
+
         if (!bodyData) {
             throw new Error('No body found in the response!');
         }
@@ -240,7 +242,7 @@ function structureNewsData(articles) {
 
 async function generateAIResponses(newsData, personas, setting) {
     const newsContainer = document.getElementById('news');
-    newsContainer.innerHTML = ''; 
+    newsContainer.innerHTML = '';
     const responses = [];
 
     let foundPersonas = [];
@@ -274,9 +276,9 @@ async function generateAIResponses(newsData, personas, setting) {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            
+
             const aiResponse = await response.json();
-            
+
             if (aiResponse && aiResponse.choices && aiResponse.choices.length && aiResponse.choices[0] && aiResponse.choices[0].message && aiResponse.choices[0].message.content) {
                 const textContent = aiResponse.choices[0].message.content;
                 const imgPrompt = `Generate an image of ${persona.name}, ${persona.description} in the setting chosen: ${setting}.`;
@@ -298,13 +300,14 @@ async function generateAIResponses(newsData, personas, setting) {
                     const data = await imageResponse.json();
                     const parsedBody = JSON.parse(data.body);
                     if (parsedBody && parsedBody.base64_image) {
-                        let base64String =  `data:image/png;base64,${parsedBody.base64_image}`
+                        let base64String = `data:image/png;base64,${parsedBody.base64_image}`
                         console.log('generateEnemyImage... parsedBody.base64_image: ', parsedBody.base64_image);
                         responses.push({ response: textContent, persona: persona, imageBase64: base64String });
                         displayAIResponse(news.title, textContent, persona, base64String);
                     } else {
                         throw new Error('No image generated');
-                    }                } catch (error) {
+                    }
+                } catch (error) {
                     console.error('Error generating AI response:', error);
                     newsContainer.innerHTML += `<div class="error-message">Error generating AI response for article "${news.title}": ${error.message}</div>`;
                 }
@@ -362,7 +365,7 @@ async function generatePersonas(setting) {
             },
             body: JSON.stringify({ prompt: prompt })
         });
-        
+
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
@@ -390,7 +393,7 @@ function parsePersonas(content) {
 async function imageToBase64(url, callback) {
     let img = new Image();
     img.crossOrigin = 'Anonymous';
-    img.onload = function() { 
+    img.onload = function () {
         let canvas = document.createElement('canvas');
         canvas.width = img.width;
         canvas.height = img.height;
@@ -399,7 +402,7 @@ async function imageToBase64(url, callback) {
         let dataURL = canvas.toDataURL('image/png');
         callback(dataURL);
     };
-    img.onerror = function() {
+    img.onerror = function () {
         console.error('Error loading image');
         callback(null);
     };
