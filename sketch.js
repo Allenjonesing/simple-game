@@ -189,22 +189,6 @@ async function generateEnemyImage(newsArticle, setting) {
     }
 }
 
-function getBase64Image(imgElementID) {
-    const img = document.getElementById(imgElementID);
-    if (img) {
-        var canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        var ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0);
-        var dataURL = canvas.toDataURL();
-        return dataURL;
-    } else {
-        console.error('No IMG element found!');
-        return '';
-    }
-}
-
 
 async function fetchNews(personas, setting) {
     const loadingMessage = document.getElementById('loading');
@@ -432,3 +416,20 @@ async function imageToBase64(url, callback) {
     };
     img.src = url;
 }
+
+function getBase64Image(imgElementID) {
+    const img = document.getElementById(imgElementID);
+    if (img) {
+        var canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, img.width, img.height);
+        var dataURL = canvas.toDataURL();
+        return dataURL;
+    } else {
+        console.error('No IMG element found!');
+        return '';
+    }
+}
+
