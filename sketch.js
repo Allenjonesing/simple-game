@@ -26,10 +26,7 @@ function setup() {
                 let y = random(50, 550);
                 npcs.push(new NPC(x, y, personas[i % personas.length]));
             }
-            generateEnemyImage(newsData[0], setting).then(base64 => {
-                enemyBase64Image = base64;
-                spawnEnemies();
-            });
+            spawnEnemies();
         });
     });
 }
@@ -142,7 +139,7 @@ function spawnEnemies() {
     for (let i = 0; i < 3; i++) {
         let x = random(50, 750);
         let y = random(50, 550);
-        enemies.push(new Enemy(x, y, enemyBase64Image));
+        enemies.push(new Enemy(x, y, base64Image));
     }
 }
 
