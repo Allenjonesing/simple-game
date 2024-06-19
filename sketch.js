@@ -295,9 +295,10 @@ async function generateAIResponses(newsData, personas, setting) {
                         throw new Error('Network response was not ok');
                     }
 
-                    const data = await response.json();
-                    const parsedBody = JSON.parse(data.body);
-                    if (parsedBody && parsedBody.base64_image) {
+                    const responseText = await response.text(); // Read response as text first
+        const data = JSON.parse(responseText); // Parse the text as JSON
+        const parsedBody = JSON.parse(data.body); // Parse the body string as JSON
+        if (parsedBody && parsedBody.base64_image) {
                         console.log('generateEnemyImage... base64_image: ', parsedBody.base64_image);
                         return parsedBody.base64_image;
                     } else {
