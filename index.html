@@ -1,15 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>My P5.js Game</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-    <script src="sketch.js"></script>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="favicon.ico">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Warriors ⚔️ — Multiplayer Word Battle</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="favicon.ico">
 </head>
 <body>
-    <div id="loading">Loading...</div>
-    <div id="news"></div>
+
+  <!-- MENU SCREEN -->
+  <div id="screen-menu" class="screen active">
+    <div class="menu-container">
+      <h1 class="game-title">⚔️ WORD WARRIORS ⚔️</h1>
+      <p class="game-subtitle">Battle your opponents with the power of words.<br>
+        Spell <span class="cat-fire">FIRE</span> words to burn,
+        <span class="cat-ice">ICE</span> words to freeze,
+        <span class="cat-heal">HEAL</span> yourself,
+        <span class="cat-dark">DARK</span> words to lifesteal — and more!</p>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" id="btn-tab-local">⚔️ Local 2-Player</button>
+        <button class="tab-btn" id="btn-tab-ai">🤖 vs AI</button>
+        <button class="tab-btn" id="btn-tab-online">🌐 Online</button>
+      </div>
+
+      <!-- Local 2-Player Tab -->
+      <div class="menu-tab-content active" id="tab-local">
+        <div class="input-group">
+          <label>Player 1 Name</label>
+          <input id="input-p1-name" type="text" placeholder="Hero" maxlength="20">
+        </div>
+        <div class="input-group">
+          <label>Player 2 Name</label>
+          <input id="input-p2-name" type="text" placeholder="Challenger" maxlength="20">
+        </div>
+        <button class="btn-primary" id="btn-start-local">⚔️ Start Battle!</button>
+      </div>
+
+      <!-- vs AI Tab -->
+      <div class="menu-tab-content" id="tab-ai">
+        <div class="input-group">
+          <label>Your Name</label>
+          <input id="input-ai-name" type="text" placeholder="Hero" maxlength="20">
+        </div>
+        <div class="input-group">
+          <label>Difficulty</label>
+          <select id="ai-difficulty">
+            <option value="easy">🟢 Easy — Goblin Shaman</option>
+            <option value="normal" selected>🟡 Normal — Dark Mage</option>
+            <option value="hard">🔴 Hard — Arch Lich</option>
+          </select>
+        </div>
+        <button class="btn-primary" id="btn-start-ai">⚔️ Challenge the AI!</button>
+      </div>
+
+      <!-- Online Tab -->
+      <div class="menu-tab-content" id="tab-online">
+        <div id="online-status" class="online-status">Connecting…</div>
+        <div class="input-group">
+          <label>Your Name</label>
+          <input id="input-online-name" type="text" placeholder="Warrior" maxlength="20">
+        </div>
+        <div class="online-actions">
+          <button class="btn-primary" id="btn-create-room">🏠 Create Room</button>
+          <div class="input-group inline">
+            <input id="input-room-code" type="text" placeholder="Room Code" maxlength="8" style="text-transform:uppercase">
+            <button class="btn-secondary" id="btn-join-room">🚪 Join</button>
+          </div>
+        </div>
+        <div id="room-code-display" class="room-code-display"></div>
+        <div class="online-info">
+          <p>🌐 Requires the <code>server.js</code> backend to be running.<br>
+             See <b>README.md</b> for setup instructions.</p>
+        </div>
+      </div>
+
+      <!-- Category Reference -->
+      <details class="categories-ref">
+        <summary>📖 Word Categories &amp; Effects</summary>
+        <div class="cat-grid">
+          <div class="cat-card" style="border-color:#ff5555">⚔️ <b>WARRIOR</b><br><small>Attack words → +50% damage<br><em>sword, slash, strike, blade…</em></small></div>
+          <div class="cat-card" style="border-color:#44ff88">💚 <b>HEAL</b><br><small>Healing words → restore HP<br><em>heal, cure, mend, balm…</em></small></div>
+          <div class="cat-card" style="border-color:#4488ff">🛡️ <b>SHIELD</b><br><small>Defense words → gain shield<br><em>shield, guard, block…</em></small></div>
+          <div class="cat-card" style="border-color:#ff8844">🔥 <b>FIRE</b><br><small>Fire words → +25% dmg + Burn<br><em>fire, flame, blaze, scorch…</em></small></div>
+          <div class="cat-card" style="border-color:#88ddff">❄️ <b>ICE</b><br><small>Ice words → +25% dmg + Freeze<br><em>ice, frost, freeze, blizzard…</em></small></div>
+          <div class="cat-card" style="border-color:#ffff44">⚡ <b>LIGHTNING</b><br><small>Lightning words → +25% dmg + Stun<br><em>shock, bolt, thunder, zap…</em></small></div>
+          <div class="cat-card" style="border-color:#88ff44">☠️ <b>POISON</b><br><small>Poison words → Poison DOT<br><em>poison, venom, toxic, blight…</em></small></div>
+          <div class="cat-card" style="border-color:#bb66ff">🌑 <b>DARK</b><br><small>Dark words → +25% dmg + Lifesteal<br><em>death, doom, shadow, curse…</em></small></div>
+          <div class="cat-card" style="border-color:#44ff66">🌿 <b>NATURE</b><br><small>Nature words → small heal + attack<br><em>leaf, vine, root, bloom…</em></small></div>
+          <div class="cat-card" style="border-color:#dd88ff">✨ <b>ARCANE</b><br><small>Arcane words → +35% dmg + Mana Drain<br><em>spell, rune, arcane, sigil…</em></small></div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="screen-game" class="screen">
+    <div class="game-layout">
+
+      <!-- Player 1 Panel (left) -->
+      <div id="player1-panel" class="player-panel p1">
+        <div class="player-name">Player 1</div>
+        <div class="hp-bar-wrap">
+          <div class="hp-bar">
+            <div class="hp-fill" style="width:100%;background:#44ff88"></div>
+          </div>
+          <span class="hp-text">100/100</span>
+        </div>
+        <div class="shield-text"></div>
+        <div class="status-text"></div>
+        <div class="score-text">Score: 0</div>
+      </div>
+
+      <!-- Center: Battle Log + Action Area -->
+      <div class="battle-center">
+        <div id="turn-banner" class="turn-banner">⚔️ BATTLE ⚔️</div>
+
+        <div id="battle-log" class="battle-log">
+          <div class="log-entry" style="color:#888">Battle log will appear here…</div>
+        </div>
+
+        <div id="flash-message" class="flash-message"></div>
+
+        <div id="action-area" class="action-area">
+          <div id="wait-message" class="wait-message" style="display:none">
+            ⏳ Waiting for opponent…
+          </div>
+
+          <div class="word-area">
+            <div class="word-area-label">YOUR WORD:</div>
+            <div id="current-word" class="current-word"></div>
+            <div id="word-preview" class="word-preview"></div>
+          </div>
+
+          <div id="rack-tiles" class="rack-tiles"></div>
+
+          <div class="action-buttons">
+            <button class="btn-submit" id="btn-submit">⚔️ ATTACK! <kbd>↵</kbd></button>
+            <button class="btn-clear" id="btn-clear">✖ Clear <kbd>Esc</kbd></button>
+            <button class="btn-pass" id="btn-pass">⏭ Pass</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Player 2 Panel (right) -->
+      <div id="player2-panel" class="player-panel p2">
+        <div class="player-name">Player 2</div>
+        <div class="hp-bar-wrap">
+          <div class="hp-bar">
+            <div class="hp-fill" style="width:100%;background:#44ff88"></div>
+          </div>
+          <span class="hp-text">100/100</span>
+        </div>
+        <div class="shield-text"></div>
+        <div class="status-text"></div>
+        <div class="score-text">Score: 0</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- GAME OVER SCREEN -->
+  <div id="screen-gameover" class="screen">
+    <div class="gameover-container">
+      <div class="gameover-crown">👑</div>
+      <h1 id="gameover-title" class="gameover-title">Victory!</h1>
+      <div id="gameover-stats" class="gameover-stats"></div>
+      <button class="btn-primary" id="btn-play-again">🔄 Play Again</button>
+    </div>
+  </div>
+
+  <script src="js/wordBank.js"></script>
+  <script src="js/game.js"></script>
+  <!-- Uncomment when server.js is running:
+  <script src="/socket.io/socket.io.js"></script>
+  -->
 </body>
 </html>
