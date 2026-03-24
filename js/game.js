@@ -46,7 +46,7 @@ function shuffle(arr) {
 // GAME CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 const MAX_HP = 100;
-const RACK_SIZE = 7;
+const RACK_SIZE = 10;
 const BURN_DMG = 5;
 const POISON_DMG = 3;
 const BURN_TURNS = 3;
@@ -360,7 +360,8 @@ function renderBattleLog() {
 
 function renderRack(playerIndex) {
   const player = GameState.players[playerIndex];
-  const rackEl = $('rack-tiles');
+  const useP2El = (GameState.mode === 'local' && playerIndex === 1);
+  const rackEl = $(useP2El ? 'rack-tiles-p2' : 'rack-tiles');
   if (!rackEl) return;
   rackEl.innerHTML = '';
   player.rack.forEach((letter, idx) => {
@@ -371,7 +372,7 @@ function renderRack(playerIndex) {
     const val = LETTER_VALUES[letter] !== undefined ? LETTER_VALUES[letter] : '';
     tile.innerHTML = `<span class="tile-letter">${letter}</span><span class="tile-val">${val}</span>`;
     if (!isUsed) {
-      tile.addEventListener('click', () => onTileClick(idx));
+      tile.addEventListener('click', () => onTileClick(playerIndex, idx));
     }
     rackEl.appendChild(tile);
   });
@@ -379,7 +380,9 @@ function renderRack(playerIndex) {
 
 function renderWordArea() {
   const player = GameState.players[GameState.turn];
-  const wordEl = $('current-word');
+  const useP2El = (GameState.mode === 'local' && GameState.turn === 1);
+  const suffix = useP2El ? '-p2' : '';
+  const wordEl = $('current-word' + suffix);
   if (!wordEl) return;
   wordEl.innerHTML = '';
   player.selectedWord.forEach((s, pos) => {
@@ -393,7 +396,7 @@ function renderWordArea() {
 
   // Show word preview (score + category)
   const word = player.selectedWord.map(s => s.letter).join('').toLowerCase();
-  const preview = $('word-preview');
+  const preview = $('word-preview' + suffix);
   if (preview) {
     if (word.length === 0) {
       preview.textContent = '';
@@ -421,34 +424,79 @@ function renderTurnBanner() {
   const player = GameState.players[GameState.turn];
   banner.textContent = `✨ ${player.name.toUpperCase()}'S TURN ✨`;
 
-  // Show/hide action buttons based on mode and turn
-  const isMyTurn = GameState.mode === 'online'
-    ? GameState.turn === GameState.myPlayerIndex
-    : true;
-  const actionArea = $('action-area');
-  if (actionArea) {
-    actionArea.style.display = isMyTurn ? 'flex' : 'none';
-    const waitMsg = $('wait-message');
-    if (waitMsg) waitMsg.style.display = isMyTurn ? 'none' : 'block';
+  const p2Area = $('action-area-p2');
+  const p1Area = $('action-area');
+
+  if (GameState.mode === 'local') {
+    // Pass-and-play: show the active player's action area, hide the other
+    if (p1Area) p1Area.style.display = GameState.turn === 0 ? 'flex' : 'none';
+    if (p2Area) p2Area.style.display = GameState.turn === 1 ? 'flex' : 'none';
+  } else {
+    // AI / Online: only P1 action area; show/hide based on whose turn it is
+    if (p2Area) p2Area.style.display = 'none';
+    const isMyTurn = GameState.mode === 'online'
+      ? GameState.turn === GameState.myPlayerIndex
+      : true;
+    if (p1Area) {
+      p1Area.style.display = isMyTurn ? 'flex' : 'none';
+      const waitMsg = $('wait-message');
+      if (waitMsg) waitMsg.style.display = isMyTurn ? 'none' : 'block';
+    }
   }
 }
 
 function renderAll() {
   for (const p of GameState.players) renderPlayerPanel(p);
   renderBattleLog();
-  renderRack(GameState.turn);
+  if (GameState.mode === 'local') {
+    // Pass-and-play: always show both racks so players can see each other's tiles
+    renderRack(0);
+    renderRack(1);
+  } else {
+    renderRack(GameState.turn);
+  }
   renderWordArea();
   renderTurnBanner();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// API DICTIONARY FALLBACK
+// ─────────────────────────────────────────────────────────────────────────────
+let _isCheckingWord = false;
+
+/**
+ * Validate a word: checks local database first, then falls back to the
+ * Free Dictionary API (dictionaryapi.dev) if not found locally.
+ * Results are cached in VALID_WORDS to avoid repeat API calls.
+ */
+async function checkWordValid(word) {
+  const lower = word.toLowerCase();
+  if (isValidWord(lower)) return true;
+  try {
+    const res = await fetch(
+      `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lower)}`
+    );
+    if (res.ok) {
+      // Cache the result so future local checks succeed instantly
+      VALID_WORDS.add(lower);
+      return true;
+    }
+    return false;
+  } catch {
+    // Network error or API down — fall back to local result only
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // INTERACTION HANDLERS
 // ─────────────────────────────────────────────────────────────────────────────
-function onTileClick(rackIdx) {
+function onTileClick(playerIndex, rackIdx) {
   if (GameState.phase !== 'PLAYING') return;
+  // Only the current turn's player may interact, and in online mode only your own turn
+  if (playerIndex !== GameState.turn ||
+      (GameState.mode === 'online' && GameState.turn !== GameState.myPlayerIndex)) return;
   const player = GameState.players[GameState.turn];
-  // In online mode, only your turn
-  if (GameState.mode === 'online' && GameState.turn !== GameState.myPlayerIndex) return;
   player.selectedWord.push({ letter: player.rack[rackIdx], rackIdx });
   renderRack(GameState.turn);
   renderWordArea();
@@ -462,8 +510,9 @@ function onWordTileClick(pos) {
   renderWordArea();
 }
 
-function onSubmit() {
+async function onSubmit() {
   if (GameState.phase !== 'PLAYING') return;
+  if (_isCheckingWord) return; // prevent double-submit while API is in flight
   const player = GameState.players[GameState.turn];
   const word = player.selectedWord.map(s => s.letter).join('').toLowerCase();
 
@@ -471,13 +520,26 @@ function onSubmit() {
     flashMessage('Word must be at least 2 letters!', '#ff5555');
     return;
   }
-  if (!isValidWord(word)) {
-    flashMessage(`"${word.toUpperCase()}" is not a valid word!`, '#ff5555');
-    return;
-  }
   if (!canFormWord(word, player.rack)) {
     flashMessage('Cannot form this word from your tiles!', '#ff5555');
     return;
+  }
+
+  // Fast path: word is already in local database
+  if (!isValidWord(word)) {
+    // Slow path: ask the external dictionary
+    _isCheckingWord = true;
+    flashMessage('🔍 Checking dictionary…', '#ffcc44');
+    const valid = await checkWordValid(word);
+    _isCheckingWord = false;
+    // Guard: player may have cleared/changed the word while the API call was running
+    const currentWord = GameState.players[GameState.turn].selectedWord
+      .map(s => s.letter).join('').toLowerCase();
+    if (currentWord !== word) return;
+    if (!valid) {
+      flashMessage(`"${word.toUpperCase()}" is not a valid word!`, '#ff5555');
+      return;
+    }
   }
 
   // Online mode: send to server
@@ -794,6 +856,9 @@ window.addEventListener('DOMContentLoaded', () => {
   $('btn-submit').addEventListener('click', onSubmit);
   $('btn-pass').addEventListener('click', onPass);
   $('btn-clear').addEventListener('click', onClear);
+  $('btn-submit-p2').addEventListener('click', onSubmit);
+  $('btn-pass-p2').addEventListener('click', onPass);
+  $('btn-clear-p2').addEventListener('click', onClear);
   $('btn-play-again').addEventListener('click', onPlayAgain);
 
   // Keyboard shortcut: Enter = submit

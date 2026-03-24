@@ -97,7 +97,7 @@
 
   <!-- GAME SCREEN -->
   <div id="screen-game" class="screen">
-    <div class="game-layout">
+    <div class="game-layout" id="game-layout">
 
       <!-- Player 1 Panel (left) -->
       <div id="player1-panel" class="player-panel p1">
@@ -113,8 +113,24 @@
         <div class="score-text">Score: 0</div>
       </div>
 
-      <!-- Center: Battle Log + Action Area -->
+      <!-- Center: Battle Log + Action Areas -->
       <div class="battle-center">
+
+        <!-- P2 Action Area (top, rotated 180° for pass-and-play — local mode only) -->
+        <div id="action-area-p2" class="action-area action-area-p2" style="display:none">
+          <div class="word-area">
+            <div class="word-area-label">YOUR WORD:</div>
+            <div id="current-word-p2" class="current-word"></div>
+            <div id="word-preview-p2" class="word-preview"></div>
+          </div>
+          <div id="rack-tiles-p2" class="rack-tiles"></div>
+          <div class="action-buttons">
+            <button class="btn-submit" id="btn-submit-p2">⚔️ ATTACK! <kbd>↵</kbd></button>
+            <button class="btn-clear" id="btn-clear-p2">✖ Clear <kbd>Esc</kbd></button>
+            <button class="btn-pass" id="btn-pass-p2">⏭ Pass</button>
+          </div>
+        </div>
+
         <div id="turn-banner" class="turn-banner">⚔️ BATTLE ⚔️</div>
 
         <div id="battle-log" class="battle-log">

@@ -82,8 +82,8 @@ function shuffle(arr) {
   return a;
 }
 
-function drawTiles(bag, rack, count = 7) {
-  while (rack.length < 7 && bag.length > 0 && count > 0) {
+function drawTiles(bag, rack, count = 10) {
+  while (rack.length < 10 && bag.length > 0 && count > 0) {
     rack.push(bag.pop());
     count--;
   }
@@ -100,7 +100,7 @@ io.on('connection', socket => {
     const code = generateRoomCode();
     const bag = buildTileBag();
     const rack = [];
-    drawTiles(bag, rack, 7);
+    drawTiles(bag, rack, 10);
 
     const room = {
       code,
@@ -140,7 +140,7 @@ io.on('connection', socket => {
     }
 
     const rack = [];
-    drawTiles(room.bag, rack, 7);
+    drawTiles(room.bag, rack, 10);
     const player = {
       socketId: socket.id,
       name: (name || 'Warrior').slice(0, 20),
@@ -183,7 +183,7 @@ io.on('connection', socket => {
     for (const idx of usedIndices) player.rack.splice(idx, 1);
 
     // Draw replacement tiles
-    drawTiles(room.bag, player.rack, 7 - player.rack.length);
+    drawTiles(room.bag, player.rack, 10 - player.rack.length);
 
     // Flip turn
     room.turn = playerIndex === 0 ? 1 : 0;
@@ -206,7 +206,7 @@ io.on('connection', socket => {
     const player = room.players[playerIndex];
     const discardCount = Math.min(3, player.rack.length);
     player.rack.splice(0, discardCount);
-    drawTiles(room.bag, player.rack, 7 - player.rack.length);
+    drawTiles(room.bag, player.rack, 10 - player.rack.length);
     room.turn = playerIndex === 0 ? 1 : 0;
 
     io.to(roomCode).emit('opponentPassed', { playerIndex, newRack: player.rack });
